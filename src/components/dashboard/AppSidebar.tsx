@@ -27,10 +27,10 @@ const studentMenu = [
 ];
 
 const instructorMenu = [
-  { title: "Inicio", url: "/instructor", icon: Home },
-  { title: "Mis Cursos", url: "/instructor/my-courses", icon: BookOpen },
-  { title: "Estudiantes", url: "/instructor/students", icon: Users },
-  { title: "Perfil", url: "/instructor/profile", icon: Settings },
+  { title: "Inicio", url: "/dashboard", icon: Home },
+  { title: "Mis Cursos", url: "/dashboard/instructor-courses", icon: BookOpen },
+  { title: "Estudiantes", url: "/dashboard/instructor-students", icon: Users },
+  { title: "Perfil", url: "/dashboard/profile", icon: Settings },
 ];
 
 const adminMenu = [
