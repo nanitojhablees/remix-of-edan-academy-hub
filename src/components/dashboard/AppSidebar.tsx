@@ -1,4 +1,4 @@
-import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog } from "lucide-react";
+import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -15,11 +15,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import logoEdan from "@/assets/logo-edan.png";
+import { NotificationBell } from "./NotificationBell";
 
 const studentMenu = [
   { title: "Inicio", url: "/dashboard", icon: Home },
   { title: "Mis Cursos", url: "/dashboard/my-courses", icon: BookOpen },
   { title: "Catálogo", url: "/dashboard/catalog", icon: GraduationCap },
+  { title: "Logros", url: "/dashboard/achievements", icon: Trophy },
+  { title: "Ranking", url: "/dashboard/leaderboard", icon: Medal },
   { title: "Perfil", url: "/dashboard/profile", icon: Settings },
 ];
 
@@ -34,6 +37,7 @@ const adminMenu = [
   { title: "Dashboard", url: "/admin", icon: BarChart3 },
   { title: "Usuarios", url: "/admin/users", icon: UserCog },
   { title: "Cursos", url: "/admin/courses", icon: BookOpen },
+  { title: "Analytics", url: "/admin/analytics", icon: Trophy },
   { title: "Configuración", url: "/admin/settings", icon: Settings },
 ];
 
@@ -56,7 +60,10 @@ export function AppSidebar() {
           <img src={logoEdan} alt="EDAN" className="h-8 w-auto" />
           <span className="font-bold text-sm">EDAN LMS</span>
         </div>
-        <SidebarTrigger className="ml-auto" />
+        <div className="flex items-center gap-2 ml-auto">
+          <NotificationBell />
+          <SidebarTrigger />
+        </div>
       </SidebarHeader>
 
       <SidebarContent>
