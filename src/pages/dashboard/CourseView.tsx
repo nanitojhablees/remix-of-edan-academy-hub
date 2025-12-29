@@ -1,21 +1,31 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useCourse, useCourseModules, useEnrollment } from "@/hooks/useCourses";
+import { useCourse, useCourseModules, useEnrollment, useMarkLessonComplete } from "@/hooks/useCourses";
+import { useCourseCertificate, useIssueCertificate } from "@/hooks/useCertificates";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock } from "lucide-react";
+import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function CourseView() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: course, isLoading: loadingCourse } = useCourse(courseId);
   const { data: modules, isLoading: loadingModules } = useCourseModules(courseId);
   const { data: enrollment } = useEnrollment(courseId);
+  const { data: certificate } = useCourseCertificate(courseId);
+  const markLessonComplete = useMarkLessonComplete();
+  const issueCertificate = useIssueCertificate();
+  const { toast } = useToast();
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
   const [lessonsMap, setLessonsMap] = useState<Record<string, any[]>>({});
+  const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
+  const [loadingCompletion, setLoadingCompletion] = useState(false);
 
   // Load lessons for all modules
   useEffect(() => {
@@ -33,6 +43,120 @@ export default function CourseView() {
       });
     }
   }, [modules]);
+
+  // Load completed lessons
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!user) return;
+      
+      const allLessons = Object.values(lessonsMap).flat();
+      if (allLessons.length === 0) return;
+      
+      const { data } = await supabase
+        .from("lesson_progress")
+        .select("lesson_id")
+        .eq("user_id", user.id)
+        .eq("completed", true)
+        .in("lesson_id", allLessons.map(l => l.id));
+      
+      if (data) {
+        setCompletedLessons(new Set(data.map(p => p.lesson_id)));
+      }
+    };
+    
+    loadProgress();
+  }, [lessonsMap, user]);
+
+  const allLessons = Object.values(lessonsMap).flat();
+  const totalLessons = allLessons.length;
+  const completedCount = allLessons.filter(l => completedLessons.has(l.id)).length;
+  const progressPercent = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+  const isCompleted = totalLessons > 0 && completedCount === totalLessons;
+
+  const handleMarkComplete = async (lessonId: string) => {
+    if (!user || !courseId) return;
+    
+    try {
+      setLoadingCompletion(true);
+      
+      await markLessonComplete.mutateAsync(lessonId);
+      
+      setCompletedLessons(prev => new Set([...prev, lessonId]));
+      
+      toast({
+        title: "Lección completada",
+        description: "Tu progreso ha sido guardado"
+      });
+      
+      // Check if course is now complete
+      const newCompletedCount = completedCount + 1;
+      if (newCompletedCount === totalLessons && !certificate) {
+        // Issue certificate
+        try {
+          await issueCertificate.mutateAsync({
+            courseId,
+            grade: 100 // Default grade for completion
+          });
+          
+          toast({
+            title: "¡Felicidades!",
+            description: "Has completado el curso y obtenido tu certificado",
+          });
+        } catch (certError) {
+          console.error('Error issuing certificate:', certError);
+        }
+      }
+    } catch (error) {
+      console.error('Error marking lesson complete:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo marcar la lección como completada",
+        variant: "destructive"
+      });
+    } finally {
+      setLoadingCompletion(false);
+    }
+  };
+
+  const handleDownloadCertificate = async () => {
+    if (!certificate) return;
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({ certificateId: certificate.id, action: 'download' })
+        }
+      );
+
+      if (!response.ok) throw new Error('Error generating certificate');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `certificado-${certificate.certificate_code}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo descargar el certificado",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (loadingCourse || loadingModules) {
     return (
@@ -84,6 +208,20 @@ export default function CourseView() {
                   <span>{modules?.length || 0} módulos</span>
                 </div>
               </div>
+              {enrollment && (
+                <div className="mt-2">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Progreso</span>
+                    <span>{progressPercent}%</span>
+                  </div>
+                  <div className="w-full bg-muted rounded-full h-2">
+                    <div 
+                      className="bg-primary h-2 rounded-full transition-all duration-300" 
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="p-0">
               <Accordion type="multiple" className="w-full">
@@ -107,10 +245,12 @@ export default function CourseView() {
                               selectedLesson === lesson.id ? 'bg-muted' : ''
                             } ${!enrollment ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           >
-                            {enrollment ? (
-                              <PlayCircle className="h-4 w-4 text-primary flex-shrink-0" />
-                            ) : (
+                            {!enrollment ? (
                               <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            ) : completedLessons.has(lesson.id) ? (
+                              <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
+                            ) : (
+                              <PlayCircle className="h-4 w-4 text-primary flex-shrink-0" />
                             )}
                             <span className="flex-1 truncate">{lesson.title}</span>
                             <span className="text-xs text-muted-foreground">{lesson.duration_minutes}m</span>
@@ -129,18 +269,57 @@ export default function CourseView() {
         <div className="lg:col-span-2 order-1 lg:order-2">
           <Card className="mb-6">
             <CardHeader>
-              <Badge variant="outline" className="w-fit mb-2">
-                Nivel {course.level}
-              </Badge>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <Badge variant="outline" className="w-fit">
+                  Nivel {course.level}
+                </Badge>
+                {isCompleted && certificate && (
+                  <Button 
+                    size="sm" 
+                    onClick={handleDownloadCertificate}
+                    className="gap-2"
+                  >
+                    <Award className="h-4 w-4" />
+                    Descargar Certificado
+                  </Button>
+                )}
+              </div>
               <CardTitle className="text-2xl">{course.title}</CardTitle>
               <p className="text-muted-foreground">{course.description}</p>
             </CardHeader>
           </Card>
 
+          {isCompleted && certificate && (
+            <Card className="mb-6 border-primary/50 bg-primary/5">
+              <CardContent className="py-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Award className="h-6 w-6 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-foreground">¡Curso Completado!</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Tu certificado está disponible para descargar
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={handleDownloadCertificate} className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Descargar PDF
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {currentLessonData ? (
             <Card>
               <CardHeader>
-                <CardTitle>{currentLessonData.title}</CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle>{currentLessonData.title}</CardTitle>
+                  {completedLessons.has(currentLessonData.id) && (
+                    <Badge className="bg-green-500">Completada</Badge>
+                  )}
+                </div>
               </CardHeader>
               <CardContent>
                 {currentLessonData.video_url && (
@@ -153,10 +332,25 @@ export default function CourseView() {
                   {currentLessonData.content || "Contenido de la lección próximamente."}
                 </div>
                 <div className="flex justify-end mt-6">
-                  <Button className="gap-2">
-                    <CheckCircle className="h-4 w-4" />
-                    Marcar como completada
-                  </Button>
+                  {!completedLessons.has(currentLessonData.id) ? (
+                    <Button 
+                      className="gap-2"
+                      onClick={() => handleMarkComplete(currentLessonData.id)}
+                      disabled={loadingCompletion}
+                    >
+                      {loadingCompletion ? (
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                      ) : (
+                        <CheckCircle className="h-4 w-4" />
+                      )}
+                      Marcar como completada
+                    </Button>
+                  ) : (
+                    <Button variant="outline" disabled className="gap-2">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      Completada
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

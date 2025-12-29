@@ -1,4 +1,4 @@
-import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Bell } from "lucide-react";
+import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Bell, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -21,6 +21,7 @@ const studentMenu = [
   { title: "Inicio", url: "/dashboard", icon: Home },
   { title: "Mis Cursos", url: "/dashboard/my-courses", icon: BookOpen },
   { title: "Catálogo", url: "/dashboard/catalog", icon: GraduationCap },
+  { title: "Certificados", url: "/dashboard/certificates", icon: Award },
   { title: "Logros", url: "/dashboard/achievements", icon: Trophy },
   { title: "Ranking", url: "/dashboard/leaderboard", icon: Medal },
   { title: "Perfil", url: "/dashboard/profile", icon: Settings },

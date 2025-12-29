@@ -8,6 +8,7 @@ import CourseView from "./dashboard/CourseView";
 import Profile from "./dashboard/Profile";
 import Achievements from "./dashboard/Achievements";
 import Leaderboard from "./dashboard/Leaderboard";
+import Certificates from "./dashboard/Certificates";
 import AdminDashboard from "./admin/AdminDashboard";
 import UsersManagement from "./admin/UsersManagement";
 import CoursesManagement from "./admin/CoursesManagement";
@@ -49,6 +50,7 @@ export default function Dashboard() {
             <Route path="course/:courseId" element={<CourseView />} />
             <Route path="achievements" element={<Achievements />} />
             <Route path="leaderboard" element={<Leaderboard />} />
+            <Route path="certificates" element={<Certificates />} />
             
             {/* Instructor Routes */}
             <Route path="instructor-courses" element={<InstructorCourses />} />
