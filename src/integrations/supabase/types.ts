@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      answer_options: {
+        Row: {
+          id: string
+          is_correct: boolean
+          option_text: string
+          order_index: number
+          question_id: string
+        }
+        Insert: {
+          id?: string
+          is_correct?: boolean
+          option_text: string
+          order_index?: number
+          question_id: string
+        }
+        Update: {
+          id?: string
+          is_correct?: boolean
+          option_text?: string
+          order_index?: number
+          question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "answer_options_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badges: {
         Row: {
           category: string
@@ -156,6 +188,104 @@ export type Database = {
             columns: ["course_id"]
             isOneToOne: false
             referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_attempts: {
+        Row: {
+          answers: Json | null
+          completed_at: string | null
+          exam_id: string
+          id: string
+          passed: boolean | null
+          score: number | null
+          started_at: string
+          user_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          completed_at?: string | null
+          exam_id: string
+          id?: string
+          passed?: boolean | null
+          score?: number | null
+          started_at?: string
+          user_id: string
+        }
+        Update: {
+          answers?: Json | null
+          completed_at?: string | null
+          exam_id?: string
+          id?: string
+          passed?: boolean | null
+          score?: number | null
+          started_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_attempts_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exams: {
+        Row: {
+          course_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number | null
+          id: string
+          is_published: boolean | null
+          max_attempts: number | null
+          module_id: string | null
+          passing_score: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_published?: boolean | null
+          max_attempts?: number | null
+          module_id?: string | null
+          passing_score?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number | null
+          id?: string
+          is_published?: boolean | null
+          max_attempts?: number | null
+          module_id?: string | null
+          passing_score?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exams_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exams_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
             referencedColumns: ["id"]
           },
         ]
@@ -373,6 +503,44 @@ export type Database = {
         }
         Relationships: []
       }
+      questions: {
+        Row: {
+          created_at: string
+          exam_id: string
+          id: string
+          order_index: number
+          points: number
+          question_text: string
+          question_type: string
+        }
+        Insert: {
+          created_at?: string
+          exam_id: string
+          id?: string
+          order_index?: number
+          points?: number
+          question_text: string
+          question_type?: string
+        }
+        Update: {
+          created_at?: string
+          exam_id?: string
+          id?: string
+          order_index?: number
+          points?: number
+          question_text?: string
+          question_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "questions_exam_id_fkey"
+            columns: ["exam_id"]
+            isOneToOne: false
+            referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_analytics: {
         Row: {
           created_at: string
@@ -535,6 +703,25 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "certificates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_exam: {
+        Args: { _answers: Json; _attempt_id: string }
+        Returns: {
+          answers: Json | null
+          completed_at: string | null
+          exam_id: string
+          id: string
+          passed: boolean | null
+          score: number | null
+          started_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "exam_attempts"
           isOneToOne: true
           isSetofReturn: false
         }

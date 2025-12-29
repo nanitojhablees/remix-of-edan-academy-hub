@@ -9,6 +9,7 @@ import Profile from "./dashboard/Profile";
 import Achievements from "./dashboard/Achievements";
 import Leaderboard from "./dashboard/Leaderboard";
 import Certificates from "./dashboard/Certificates";
+import ExamView from "./dashboard/ExamView";
 import AdminDashboard from "./admin/AdminDashboard";
 import UsersManagement from "./admin/UsersManagement";
 import CoursesManagement from "./admin/CoursesManagement";
@@ -18,6 +19,8 @@ import InstructorDashboard from "./instructor/InstructorDashboard";
 import InstructorCourses from "./instructor/InstructorCourses";
 import InstructorStudents from "./instructor/InstructorStudents";
 import InstructorCourseEditor from "./instructor/InstructorCourseEditor";
+import InstructorExams from "./instructor/InstructorExams";
+import InstructorExamEditor from "./instructor/InstructorExamEditor";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function Dashboard() {
@@ -55,7 +58,10 @@ export default function Dashboard() {
             {/* Instructor Routes */}
             <Route path="instructor-courses" element={<InstructorCourses />} />
             <Route path="instructor-students" element={<InstructorStudents />} />
+            <Route path="instructor-exams" element={<InstructorExams />} />
             <Route path="course-editor/:courseId" element={<InstructorCourseEditor />} />
+            <Route path="exam-editor/:examId" element={<InstructorExamEditor />} />
+            <Route path="exam/:examId" element={<ExamView />} />
             
             {/* Admin Routes */}
             <Route path="users" element={<UsersManagement />} />
