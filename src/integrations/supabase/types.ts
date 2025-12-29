@@ -50,6 +50,42 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          certificate_code: string
+          course_id: string
+          course_title: string
+          created_at: string
+          grade: number | null
+          id: string
+          issued_at: string
+          student_name: string
+          user_id: string
+        }
+        Insert: {
+          certificate_code: string
+          course_id: string
+          course_title: string
+          created_at?: string
+          grade?: number | null
+          id?: string
+          issued_at?: string
+          student_name: string
+          user_id: string
+        }
+        Update: {
+          certificate_code?: string
+          course_id?: string
+          course_title?: string
+          created_at?: string
+          grade?: number | null
+          id?: string
+          issued_at?: string
+          student_name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           created_at: string
@@ -471,6 +507,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      generate_certificate_code: { Args: never; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -481,6 +518,26 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      issue_certificate: {
+        Args: { _course_id: string; _grade?: number; _user_id: string }
+        Returns: {
+          certificate_code: string
+          course_id: string
+          course_title: string
+          created_at: string
+          grade: number | null
+          id: string
+          issued_at: string
+          student_name: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "certificates"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
