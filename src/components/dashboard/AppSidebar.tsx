@@ -1,4 +1,4 @@
-import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion } from "lucide-react";
+import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -36,11 +36,16 @@ const instructorMenu = [
 ];
 
 const adminMenu = [
-  { title: "Dashboard", url: "/admin", icon: BarChart3 },
-  { title: "Usuarios", url: "/admin/users", icon: UserCog },
-  { title: "Cursos", url: "/admin/courses", icon: BookOpen },
-  { title: "Analytics", url: "/admin/analytics", icon: Trophy },
-  { title: "Configuración", url: "/admin/settings", icon: Settings },
+  { title: "Dashboard", url: "/dashboard", icon: BarChart3 },
+  { title: "Usuarios", url: "/dashboard/admin-users", icon: UserCog },
+  { title: "Cursos", url: "/dashboard/admin-courses", icon: BookOpen },
+  { title: "Inscripciones", url: "/dashboard/admin-enrollments", icon: GraduationCap },
+  { title: "Exámenes", url: "/dashboard/admin-exams", icon: FileQuestion },
+  { title: "Certificados", url: "/dashboard/admin-certificates", icon: Award },
+  { title: "Insignias", url: "/dashboard/admin-badges", icon: Medal },
+  { title: "Notificaciones", url: "/dashboard/admin-notifications", icon: Bell },
+  { title: "Analytics", url: "/dashboard/admin-analytics", icon: Trophy },
+  { title: "Configuración", url: "/dashboard/admin-settings", icon: Settings },
 ];
 
 export function AppSidebar() {
