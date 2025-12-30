@@ -15,6 +15,11 @@ import UsersManagement from "./admin/UsersManagement";
 import CoursesManagement from "./admin/CoursesManagement";
 import AdminSettings from "./admin/AdminSettings";
 import AdvancedAnalytics from "./admin/AdvancedAnalytics";
+import ExamsManagement from "./admin/ExamsManagement";
+import CertificatesManagement from "./admin/CertificatesManagement";
+import BadgesManagement from "./admin/BadgesManagement";
+import EnrollmentsManagement from "./admin/EnrollmentsManagement";
+import NotificationsManagement from "./admin/NotificationsManagement";
 import InstructorDashboard from "./instructor/InstructorDashboard";
 import InstructorCourses from "./instructor/InstructorCourses";
 import InstructorStudents from "./instructor/InstructorStudents";
@@ -64,10 +69,15 @@ export default function Dashboard() {
             <Route path="exam/:examId" element={<ExamView />} />
             
             {/* Admin Routes */}
-            <Route path="users" element={<UsersManagement />} />
-            <Route path="courses" element={<CoursesManagement />} />
-            <Route path="settings" element={<AdminSettings />} />
-            <Route path="analytics" element={<AdvancedAnalytics />} />
+            <Route path="admin-users" element={<UsersManagement />} />
+            <Route path="admin-courses" element={<CoursesManagement />} />
+            <Route path="admin-settings" element={<AdminSettings />} />
+            <Route path="admin-analytics" element={<AdvancedAnalytics />} />
+            <Route path="admin-exams" element={<ExamsManagement />} />
+            <Route path="admin-certificates" element={<CertificatesManagement />} />
+            <Route path="admin-badges" element={<BadgesManagement />} />
+            <Route path="admin-enrollments" element={<EnrollmentsManagement />} />
+            <Route path="admin-notifications" element={<NotificationsManagement />} />
           </Routes>
         </main>
       </div>
