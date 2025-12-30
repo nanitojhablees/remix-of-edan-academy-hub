@@ -2,3 +2,6 @@ project_id = "ubfwllsoopfphnqtdfaq"
 
 [functions.generate-certificate]
 verify_jwt = false
+
+[functions.create-test-users]
+verify_jwt = false
