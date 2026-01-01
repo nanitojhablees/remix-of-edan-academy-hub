@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, Save, BookOpen, FileText, Video, Trash2, GripVertical 
 import { useCourse, useCourseModules, useModuleLessons } from "@/hooks/useCourses";
 import { useCreateModule, useCreateLesson, useUpdateCourse } from "@/hooks/useInstructorData";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/hooks/useAuth";
 
 function ModuleLessons({ moduleId }: { moduleId: string }) {
   const { data: lessons, isLoading } = useModuleLessons(moduleId);
@@ -102,10 +103,13 @@ function ModuleLessons({ moduleId }: { moduleId: string }) {
 export default function InstructorCourseEditor() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const { role } = useAuth();
   const { data: course, isLoading: courseLoading } = useCourse(courseId);
   const { data: modules, isLoading: modulesLoading } = useCourseModules(courseId);
   const createModule = useCreateModule();
   const updateCourse = useUpdateCourse();
+
+  const backUrl = role === "admin" ? "/dashboard/admin-courses" : "/dashboard/instructor-courses";
 
   const [newModule, setNewModule] = useState({ title: "", description: "" });
   const [moduleDialogOpen, setModuleDialogOpen] = useState(false);
@@ -153,8 +157,8 @@ export default function InstructorCourseEditor() {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold">Curso no encontrado</h2>
-        <Button variant="link" onClick={() => navigate("/dashboard/instructor-courses")}>
-          Volver a mis cursos
+        <Button variant="link" onClick={() => navigate(backUrl)}>
+          Volver a cursos
         </Button>
       </div>
     );
@@ -164,7 +168,7 @@ export default function InstructorCourseEditor() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard/instructor-courses")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate(backUrl)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
