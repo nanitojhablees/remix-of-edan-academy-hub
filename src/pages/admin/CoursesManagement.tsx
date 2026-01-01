@@ -8,11 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Plus, Search, Clock, Users } from "lucide-react";
+import { BookOpen, Plus, Search, Clock, Users, Edit, Trash2, Settings } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 const levelNames: Record<string, string> = {
   operaciones: "Operaciones",
@@ -26,6 +27,7 @@ export default function CoursesManagement() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [newCourse, setNewCourse] = useState({
     title: "",
@@ -105,6 +107,30 @@ export default function CoursesManagement() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
+
+  const deleteCourseMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      const { error } = await supabase
+        .from("courses")
+        .delete()
+        .eq("id", courseId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-courses"] });
+      toast({ title: "Curso eliminado" });
+    },
+    onError: (error: any) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const handleDelete = (courseId: string) => {
+    if (confirm("¿Eliminar este curso? Esta acción es irreversible.")) {
+      deleteCourseMutation.mutate(courseId);
+    }
+  };
 
   const filteredCourses = courses?.filter(course =>
     course.title.toLowerCase().includes(search.toLowerCase())
@@ -240,6 +266,7 @@ export default function CoursesManagement() {
                     <TableHead>Inscritos</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Publicado</TableHead>
+                    <TableHead>Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -280,6 +307,25 @@ export default function CoursesManagement() {
                             togglePublishMutation.mutate({ courseId: course.id, isPublished: checked })
                           }
                         />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => navigate(`/dashboard/course-editor/${course.id}`)}
+                          >
+                            <Settings className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => handleDelete(course.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
