@@ -338,7 +338,144 @@ export function useDeleteCourse() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["instructor-courses"] });
       queryClient.invalidateQueries({ queryKey: ["instructor-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
       toast({ title: "Curso eliminado" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Update a module
+export function useUpdateModule() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string; title?: string; description?: string; order_index?: number }) => {
+      const { error } = await supabase
+        .from("modules")
+        .update(updates)
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+      toast({ title: "Módulo actualizado" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Delete a module
+export function useDeleteModule() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (moduleId: string) => {
+      const { error } = await supabase
+        .from("modules")
+        .delete()
+        .eq("id", moduleId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["modules"] });
+      queryClient.invalidateQueries({ queryKey: ["instructor-stats"] });
+      toast({ title: "Módulo eliminado" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Update a lesson
+export function useUpdateLesson() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { 
+      id: string; 
+      title?: string; 
+      content?: string; 
+      video_url?: string;
+      duration_minutes?: number;
+      order_index?: number;
+    }) => {
+      const { error } = await supabase
+        .from("lessons")
+        .update(updates)
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lessons"] });
+      toast({ title: "Lección actualizada" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Delete a lesson
+export function useDeleteLesson() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (lessonId: string) => {
+      const { error } = await supabase
+        .from("lessons")
+        .delete()
+        .eq("id", lessonId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["lessons"] });
+      queryClient.invalidateQueries({ queryKey: ["instructor-stats"] });
+      toast({ title: "Lección eliminada" });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Toggle course publish status
+export function useToggleCoursePublish() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, is_published }: { id: string; is_published: boolean }) => {
+      const { error } = await supabase
+        .from("courses")
+        .update({ is_published })
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["instructor-courses"] });
+      queryClient.invalidateQueries({ queryKey: ["course"] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      toast({ 
+        title: variables.is_published ? "Curso publicado" : "Curso despublicado",
+        description: variables.is_published 
+          ? "El curso ahora es visible para los estudiantes" 
+          : "El curso ya no es visible para los estudiantes"
+      });
     },
     onError: (error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });

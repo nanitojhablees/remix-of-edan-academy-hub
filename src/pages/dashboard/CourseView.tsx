@@ -10,6 +10,7 @@ import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Downl
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { RichTextViewer } from "@/components/editor/RichTextEditor";
 
 export default function CourseView() {
   const { courseId } = useParams();
@@ -323,13 +324,40 @@ export default function CourseView() {
               </CardHeader>
               <CardContent>
                 {currentLessonData.video_url && (
-                  <div className="aspect-video bg-muted rounded-lg mb-6 flex items-center justify-center">
-                    <PlayCircle className="h-16 w-16 text-muted-foreground" />
-                    <span className="ml-2 text-muted-foreground">Video disponible próximamente</span>
+                  <div className="aspect-video bg-muted rounded-lg mb-6 overflow-hidden">
+                    {currentLessonData.video_url.includes('youtube.com') || currentLessonData.video_url.includes('youtu.be') ? (
+                      <iframe
+                        className="w-full h-full"
+                        src={currentLessonData.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/')}
+                        title={currentLessonData.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : currentLessonData.video_url.includes('vimeo.com') ? (
+                      <iframe
+                        className="w-full h-full"
+                        src={currentLessonData.video_url.replace('vimeo.com/', 'player.vimeo.com/video/')}
+                        title={currentLessonData.title}
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        className="w-full h-full"
+                        controls
+                        src={currentLessonData.video_url}
+                      >
+                        Tu navegador no soporta el elemento de video.
+                      </video>
+                    )}
                   </div>
                 )}
-                <div className="prose prose-sm max-w-none dark:prose-invert">
-                  {currentLessonData.content || "Contenido de la lección próximamente."}
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  {currentLessonData.content ? (
+                    <RichTextViewer content={currentLessonData.content} />
+                  ) : (
+                    <p className="text-muted-foreground">Contenido de la lección próximamente.</p>
+                  )}
                 </div>
                 <div className="flex justify-end mt-6">
                   {!completedLessons.has(currentLessonData.id) ? (
