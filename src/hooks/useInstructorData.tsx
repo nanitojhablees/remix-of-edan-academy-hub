@@ -482,3 +482,49 @@ export function useToggleCoursePublish() {
     },
   });
 }
+
+// Reorder modules
+export function useReorderModules() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ courseId, modules }: { courseId: string; modules: { id: string; order_index: number }[] }) => {
+      const updates = modules.map(m => 
+        supabase
+          .from("modules")
+          .update({ order_index: m.order_index })
+          .eq("id", m.id)
+      );
+      
+      const results = await Promise.all(updates);
+      const error = results.find(r => r.error)?.error;
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["modules", variables.courseId] });
+    },
+  });
+}
+
+// Reorder lessons
+export function useReorderLessons() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ moduleId, lessons }: { moduleId: string; lessons: { id: string; order_index: number }[] }) => {
+      const updates = lessons.map(l => 
+        supabase
+          .from("lessons")
+          .update({ order_index: l.order_index })
+          .eq("id", l.id)
+      );
+      
+      const results = await Promise.all(updates);
+      const error = results.find(r => r.error)?.error;
+      if (error) throw error;
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["lessons", variables.moduleId] });
+    },
+  });
+}
