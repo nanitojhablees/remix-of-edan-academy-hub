@@ -6,11 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download, MessageSquare } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { RichTextViewer } from "@/components/editor/RichTextEditor";
+import { LessonDiscussion } from "@/components/comments/LessonDiscussion";
 
 export default function CourseView() {
   const { courseId } = useParams();
@@ -352,34 +354,57 @@ export default function CourseView() {
                     )}
                   </div>
                 )}
-                <div className="prose prose-sm dark:prose-invert max-w-none">
-                  {currentLessonData.content ? (
-                    <RichTextViewer content={currentLessonData.content} />
-                  ) : (
-                    <p className="text-muted-foreground">Contenido de la lección próximamente.</p>
-                  )}
-                </div>
-                <div className="flex justify-end mt-6">
-                  {!completedLessons.has(currentLessonData.id) ? (
-                    <Button 
-                      className="gap-2"
-                      onClick={() => handleMarkComplete(currentLessonData.id)}
-                      disabled={loadingCompletion}
-                    >
-                      {loadingCompletion ? (
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+
+                <Tabs defaultValue="content" className="w-full">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="content" className="gap-2">
+                      <BookOpen className="h-4 w-4" />
+                      Contenido
+                    </TabsTrigger>
+                    <TabsTrigger value="discussion" className="gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      Discusión
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="content">
+                    <div className="prose prose-sm dark:prose-invert max-w-none">
+                      {currentLessonData.content ? (
+                        <RichTextViewer content={currentLessonData.content} />
                       ) : (
-                        <CheckCircle className="h-4 w-4" />
+                        <p className="text-muted-foreground">Contenido de la lección próximamente.</p>
                       )}
-                      Marcar como completada
-                    </Button>
-                  ) : (
-                    <Button variant="outline" disabled className="gap-2">
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                      Completada
-                    </Button>
-                  )}
-                </div>
+                    </div>
+                    <div className="flex justify-end mt-6">
+                      {!completedLessons.has(currentLessonData.id) ? (
+                        <Button 
+                          className="gap-2"
+                          onClick={() => handleMarkComplete(currentLessonData.id)}
+                          disabled={loadingCompletion}
+                        >
+                          {loadingCompletion ? (
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                          ) : (
+                            <CheckCircle className="h-4 w-4" />
+                          )}
+                          Marcar como completada
+                        </Button>
+                      ) : (
+                        <Button variant="outline" disabled className="gap-2">
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          Completada
+                        </Button>
+                      )}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="discussion">
+                    <LessonDiscussion 
+                      lessonId={currentLessonData.id} 
+                      courseInstructorId={course.instructor_id || undefined}
+                    />
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           ) : (
