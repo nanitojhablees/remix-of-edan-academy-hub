@@ -35,7 +35,8 @@ import {
   Redo,
   Highlighter,
   Minus,
-  FileText,
+  Upload,
+  Paperclip,
 } from 'lucide-react';
 import {
   Popover,
@@ -44,8 +45,10 @@ import {
 } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useState, useCallback, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { FileUploader } from './FileUploader';
 
 interface RichTextEditorProps {
   content: string;
@@ -133,9 +136,10 @@ export function RichTextEditor({
     setLinkUrl('');
   }, [editor, linkUrl]);
 
-  const addImage = useCallback(() => {
-    if (!imageUrl || !editor) return;
-    editor.chain().focus().setImage({ src: imageUrl }).run();
+  const addImage = useCallback((url?: string) => {
+    const imgUrl = url || imageUrl;
+    if (!imgUrl || !editor) return;
+    editor.chain().focus().setImage({ src: imgUrl }).run();
     setImageUrl('');
   }, [editor, imageUrl]);
 
@@ -144,6 +148,19 @@ export function RichTextEditor({
     editor.chain().focus().setYoutubeVideo({ src: youtubeUrl }).run();
     setYoutubeUrl('');
   }, [editor, youtubeUrl]);
+
+  const insertFileLink = useCallback((file: { name: string; url: string; type: string }) => {
+    if (!editor) return;
+    
+    if (file.type.startsWith('image/')) {
+      addImage(file.url);
+    } else {
+      // Insert as a styled link for documents
+      editor.chain().focus().insertContent(
+        `<p><a href="${file.url}" target="_blank" rel="noopener noreferrer">📎 ${file.name}</a></p>`
+      ).run();
+    }
+  }, [editor, addImage]);
 
   if (!editor) return null;
 
@@ -351,17 +368,49 @@ export function RichTextEditor({
               </Button>
             </PopoverTrigger>
             <PopoverContent className="w-80">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label>URL de la imagen</Label>
-                  <Input
-                    placeholder="https://ejemplo.com/imagen.jpg"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && addImage()}
+              <Tabs defaultValue="upload" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upload">Subir</TabsTrigger>
+                  <TabsTrigger value="url">URL</TabsTrigger>
+                </TabsList>
+                <TabsContent value="upload" className="space-y-4 mt-4">
+                  <FileUploader
+                    accept="image/*"
+                    maxSize={10}
+                    onFileUploaded={(file) => addImage(file.url)}
                   />
-                </div>
-                <Button size="sm" onClick={addImage}>Insertar imagen</Button>
+                </TabsContent>
+                <TabsContent value="url" className="space-y-4 mt-4">
+                  <div className="space-y-2">
+                    <Label>URL de la imagen</Label>
+                    <Input
+                      placeholder="https://ejemplo.com/imagen.jpg"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && addImage()}
+                    />
+                  </div>
+                  <Button size="sm" onClick={() => addImage()}>Insertar imagen</Button>
+                </TabsContent>
+              </Tabs>
+            </PopoverContent>
+          </Popover>
+
+          {/* File Upload */}
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Paperclip className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <div className="space-y-4">
+                <Label>Subir archivo (PDF, DOC, Video, Audio)</Label>
+                <FileUploader
+                  accept="application/pdf,.doc,.docx,video/mp4,video/webm,audio/mpeg,audio/wav"
+                  maxSize={50}
+                  onFileUploaded={insertFileLink}
+                />
               </div>
             </PopoverContent>
           </Popover>
