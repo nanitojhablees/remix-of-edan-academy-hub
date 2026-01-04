@@ -20,6 +20,7 @@ import CertificatesManagement from "./admin/CertificatesManagement";
 import BadgesManagement from "./admin/BadgesManagement";
 import EnrollmentsManagement from "./admin/EnrollmentsManagement";
 import NotificationsManagement from "./admin/NotificationsManagement";
+import PaymentsManagement from "./admin/PaymentsManagement";
 import InstructorDashboard from "./instructor/InstructorDashboard";
 import InstructorCourses from "./instructor/InstructorCourses";
 import InstructorStudents from "./instructor/InstructorStudents";
@@ -78,6 +79,7 @@ export default function Dashboard() {
             <Route path="admin-badges" element={<BadgesManagement />} />
             <Route path="admin-enrollments" element={<EnrollmentsManagement />} />
             <Route path="admin-notifications" element={<NotificationsManagement />} />
+            <Route path="admin-payments" element={<PaymentsManagement />} />
           </Routes>
         </main>
       </div>

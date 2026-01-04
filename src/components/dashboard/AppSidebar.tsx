@@ -1,4 +1,4 @@
-import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell } from "lucide-react";
+import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell, CreditCard } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
@@ -40,6 +40,7 @@ const adminMenu = [
   { title: "Usuarios", url: "/dashboard/admin-users", icon: UserCog },
   { title: "Cursos", url: "/dashboard/admin-courses", icon: BookOpen },
   { title: "Inscripciones", url: "/dashboard/admin-enrollments", icon: GraduationCap },
+  { title: "Pagos", url: "/dashboard/admin-payments", icon: CreditCard },
   { title: "Exámenes", url: "/dashboard/admin-exams", icon: FileQuestion },
   { title: "Certificados", url: "/dashboard/admin-certificates", icon: Award },
   { title: "Insignias", url: "/dashboard/admin-badges", icon: Medal },
