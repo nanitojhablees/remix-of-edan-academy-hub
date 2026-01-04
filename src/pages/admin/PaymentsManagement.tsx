@@ -21,7 +21,9 @@ import {
   Tag,
   Calendar,
   Edit,
-  MoreHorizontal
+  MoreHorizontal,
+  Bell,
+  Loader2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -47,17 +49,45 @@ import {
   type PromoCode,
 } from "@/hooks/usePayments";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
 
 export default function PaymentsManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [checkingExpiring, setCheckingExpiring] = useState(false);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   const { data: payments, isLoading: loadingPayments } = usePayments();
   const { data: plans } = usePaymentPlans();
   const { data: promoCodes } = usePromoCodes();
   const { data: subscriptions, isLoading: loadingSubscriptions } = useSubscriptions();
   const { data: stats } = usePaymentStats();
+
+  const handleCheckExpiring = async () => {
+    setCheckingExpiring(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("check-expiring-subscriptions");
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Verificación completada",
+        description: `Se verificaron ${data.results?.checked || 0} suscripciones. ${data.results?.notified || 0} notificaciones enviadas.`,
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["admin-subscriptions"] });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error al verificar suscripciones",
+        variant: "destructive",
+      });
+    } finally {
+      setCheckingExpiring(false);
+    }
+  };
 
   const statCards = [
     { 
@@ -92,11 +122,25 @@ export default function PaymentsManagement() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">Gestión de Pagos</h1>
-        <p className="text-muted-foreground">
-          Administra pagos, suscripciones y códigos promocionales
-        </p>
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-bold">Gestión de Pagos</h1>
+          <p className="text-muted-foreground">
+            Administra pagos, suscripciones y códigos promocionales
+          </p>
+        </div>
+        <Button 
+          variant="outline" 
+          onClick={handleCheckExpiring}
+          disabled={checkingExpiring}
+        >
+          {checkingExpiring ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Bell className="h-4 w-4 mr-2" />
+          )}
+          Verificar Vencimientos
+        </Button>
       </div>
 
       {/* Stats Cards */}
