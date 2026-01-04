@@ -514,6 +514,104 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          duration_months: number
+          features: Json | null
+          id: string
+          is_active: boolean
+          level: string | null
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_months?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          level?: string | null
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_months?: number
+          features?: Json | null
+          id?: string
+          is_active?: boolean
+          level?: string | null
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          expires_at: string | null
+          id: string
+          notes: string | null
+          payment_method: string | null
+          plan_id: string | null
+          promo_code: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          plan_id?: string | null
+          promo_code?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          notes?: string | null
+          payment_method?: string | null
+          plan_id?: string | null
+          promo_code?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "payment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       points_history: {
         Row: {
           created_at: string
@@ -586,6 +684,59 @@ export type Database = {
         }
         Relationships: []
       }
+      promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          current_uses: number | null
+          discount_amount: number | null
+          discount_percent: number | null
+          free_access: boolean | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          plan_id: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          current_uses?: number | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          free_access?: boolean | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          plan_id?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          current_uses?: number | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          free_access?: boolean | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          plan_id?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "payment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       questions: {
         Row: {
           created_at: string
@@ -620,6 +771,60 @@ export type Database = {
             columns: ["exam_id"]
             isOneToOne: false
             referencedRelation: "exams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          auto_renew: boolean | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          payment_id: string | null
+          plan_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          auto_renew?: boolean | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_id?: string | null
+          plan_id?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          auto_renew?: boolean | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          payment_id?: string | null
+          plan_id?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "payment_plans"
             referencedColumns: ["id"]
           },
         ]
