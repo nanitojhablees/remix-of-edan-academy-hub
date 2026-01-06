@@ -52,6 +52,7 @@ const useActiveSubscription = (userId: string | undefined) => {
       return data as ActiveSubscription | null;
     },
     enabled: !!userId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 
@@ -73,6 +74,7 @@ const usePaymentStats = (userId: string | undefined) => {
       return { totalPaid, paymentCount: data?.length || 0 };
     },
     enabled: !!userId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 };
 

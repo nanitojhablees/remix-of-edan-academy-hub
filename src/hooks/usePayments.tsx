@@ -88,6 +88,8 @@ export function usePayments() {
 
       // Fetch profiles for each payment
       const userIds = [...new Set(payments?.map(p => p.user_id) || [])];
+      if (userIds.length === 0) return [] as Payment[];
+      
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name")
@@ -100,6 +102,7 @@ export function usePayments() {
         profile: profileMap.get(payment.user_id),
       })) as Payment[];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
@@ -116,6 +119,7 @@ export function usePaymentPlans() {
       if (error) throw error;
       return data as PaymentPlan[];
     },
+    staleTime: 1000 * 60 * 10, // 10 minutes - plans don't change often
   });
 }
 
@@ -155,6 +159,8 @@ export function useSubscriptions() {
 
       // Fetch profiles for each subscription
       const userIds = [...new Set(subscriptions?.map(s => s.user_id) || [])];
+      if (userIds.length === 0) return [] as Subscription[];
+      
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name")
@@ -167,6 +173,7 @@ export function useSubscriptions() {
         profile: profileMap.get(sub.user_id),
       })) as Subscription[];
     },
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
@@ -208,6 +215,7 @@ export function usePaymentStats() {
         expiredSubscriptions,
       };
     },
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
