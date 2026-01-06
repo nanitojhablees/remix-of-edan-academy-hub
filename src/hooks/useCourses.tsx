@@ -58,6 +58,7 @@ export function useCourses() {
       if (error) throw error;
       return data as Course[];
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -73,6 +74,7 @@ export function useAllCourses() {
       if (error) throw error;
       return data as Course[];
     },
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -91,6 +93,7 @@ export function useCourse(courseId: string | undefined) {
       return data as Course | null;
     },
     enabled: !!courseId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -109,6 +112,7 @@ export function useCourseModules(courseId: string | undefined) {
       return data as Module[];
     },
     enabled: !!courseId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -127,6 +131,7 @@ export function useModuleLessons(moduleId: string | undefined) {
       return data as Lesson[];
     },
     enabled: !!moduleId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
 }
 
@@ -149,6 +154,7 @@ export function useMyEnrollments() {
       return data as (Enrollment & { course: Course })[];
     },
     enabled: !!user,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
@@ -170,6 +176,7 @@ export function useEnrollment(courseId: string | undefined) {
       return data as Enrollment | null;
     },
     enabled: !!user && !!courseId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
@@ -217,6 +224,7 @@ export function useLessonProgress(lessonId: string | undefined) {
       return data;
     },
     enabled: !!user && !!lessonId,
+    staleTime: 1000 * 60 * 2, // 2 minutes
   });
 }
 
