@@ -1,20 +1,111 @@
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Phone, MapPin, Briefcase, Save, Key } from "lucide-react";
+import { User, Mail, Phone, MapPin, Briefcase, Save, Key, CreditCard, Calendar, CheckCircle, Clock, XCircle, AlertTriangle, Receipt, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Link } from "react-router-dom";
 
+interface ActiveSubscription {
+  id: string;
+  status: string;
+  expires_at: string | null;
+  auto_renew: boolean;
+  plan: {
+    name: string;
+    price: number;
+    currency: string;
+  } | null;
+}
+
+const useActiveSubscription = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ["active-subscription", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      
+      const { data, error } = await supabase
+        .from("subscriptions")
+        .select(`
+          id,
+          status,
+          expires_at,
+          auto_renew,
+          plan:payment_plans(name, price, currency)
+        `)
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as ActiveSubscription | null;
+    },
+    enabled: !!userId,
+  });
+};
+
+const usePaymentStats = (userId: string | undefined) => {
+  return useQuery({
+    queryKey: ["user-payment-stats", userId],
+    queryFn: async () => {
+      if (!userId) return { totalPaid: 0, paymentCount: 0 };
+      
+      const { data, error } = await supabase
+        .from("payments")
+        .select("amount")
+        .eq("user_id", userId)
+        .eq("status", "completed");
+
+      if (error) throw error;
+      
+      const totalPaid = data?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+      return { totalPaid, paymentCount: data?.length || 0 };
+    },
+    enabled: !!userId,
+  });
+};
+
+const getStatusBadge = (status: string) => {
+  switch (status) {
+    case "active":
+      return <Badge className="bg-green-500/20 text-green-600 hover:bg-green-500/30"><CheckCircle className="w-3 h-3 mr-1" /> Activa</Badge>;
+    case "pending":
+      return <Badge className="bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30"><Clock className="w-3 h-3 mr-1" /> Pendiente</Badge>;
+    case "expired":
+      return <Badge className="bg-orange-500/20 text-orange-600 hover:bg-orange-500/30"><AlertTriangle className="w-3 h-3 mr-1" /> Vencida</Badge>;
+    case "cancelled":
+      return <Badge className="bg-red-500/20 text-red-600 hover:bg-red-500/30"><XCircle className="w-3 h-3 mr-1" /> Cancelada</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+};
+
+const formatCurrency = (amount: number, currency: string) => {
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: currency,
+  }).format(amount);
+};
 export default function Profile() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  
+  const { data: activeSubscription, isLoading: loadingSubscription } = useActiveSubscription(user?.id);
+  const { data: paymentStats, isLoading: loadingStats } = usePaymentStats(user?.id);
   
   const [formData, setFormData] = useState({
     first_name: profile?.first_name || "",
@@ -131,6 +222,90 @@ export default function Profile() {
               <p className="text-sm text-muted-foreground capitalize mt-1">
                 Estado: <span className="text-accent font-medium">{profile?.membership_status}</span>
               </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Membership & Payment Section */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Membresía y Pagos
+          </CardTitle>
+          <CardDescription>
+            Estado de tu suscripción y resumen de pagos
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Subscription Status */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Estado de Suscripción</span>
+                {loadingSubscription ? (
+                  <Skeleton className="h-5 w-16" />
+                ) : activeSubscription ? (
+                  getStatusBadge(activeSubscription.status)
+                ) : (
+                  <Badge variant="outline">Sin suscripción</Badge>
+                )}
+              </div>
+              {activeSubscription?.plan && (
+                <p className="text-lg font-semibold">{activeSubscription.plan.name}</p>
+              )}
+            </div>
+
+            <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Calendar className="h-4 w-4" />
+                Próximo Vencimiento
+              </div>
+              {loadingSubscription ? (
+                <Skeleton className="h-6 w-24" />
+              ) : activeSubscription?.expires_at ? (
+                <div>
+                  <p className="text-lg font-semibold">
+                    {format(new Date(activeSubscription.expires_at), "dd MMMM yyyy", { locale: es })}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {activeSubscription.auto_renew ? "Renovación automática" : "Sin renovación automática"}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-lg font-semibold text-muted-foreground">-</p>
+              )}
+            </div>
+          </div>
+
+          {/* Payment Summary */}
+          <div className="p-4 rounded-lg bg-muted/50">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                  <Receipt className="h-4 w-4" />
+                  Total Pagado
+                </div>
+                {loadingStats ? (
+                  <Skeleton className="h-7 w-24" />
+                ) : (
+                  <>
+                    <p className="text-2xl font-bold">
+                      {formatCurrency(paymentStats?.totalPaid || 0, "USD")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {paymentStats?.paymentCount || 0} pagos completados
+                    </p>
+                  </>
+                )}
+              </div>
+              <Button variant="outline" asChild>
+                <Link to="/dashboard/payment-history" className="flex items-center gap-2">
+                  Ver historial
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         </CardContent>
