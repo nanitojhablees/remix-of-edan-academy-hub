@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Trophy, Medal, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { LeaderboardSkeleton } from "@/components/skeletons/LeaderboardSkeleton";
 
 const rankIcons = [Trophy, Medal, Award];
 const rankColors = ["text-yellow-500", "text-gray-400", "text-amber-600"];
@@ -15,11 +16,7 @@ export default function Leaderboard() {
   const { user } = useAuth();
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LeaderboardSkeleton />;
   }
 
   // Find current user's rank

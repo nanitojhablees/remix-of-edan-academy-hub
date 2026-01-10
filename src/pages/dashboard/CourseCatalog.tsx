@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Clock, BookOpen, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { CourseCatalogSkeleton } from "@/components/skeletons/CourseCardSkeleton";
+import { PageHeaderSkeleton } from "@/components/skeletons/PageHeaderSkeleton";
 
 const levelColors: Record<string, string> = {
   operaciones: "bg-primary",
@@ -39,8 +41,9 @@ export default function CourseCatalog() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div>
+        <PageHeaderSkeleton titleWidth="w-48" descriptionWidth="w-72" />
+        <CourseCatalogSkeleton count={6} />
       </div>
     );
   }

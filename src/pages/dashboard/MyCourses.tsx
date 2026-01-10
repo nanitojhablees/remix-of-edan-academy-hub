@@ -5,6 +5,8 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Clock, BookOpen, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { CourseListSkeleton } from "@/components/skeletons/CourseCardSkeleton";
+import { PageHeaderSkeleton } from "@/components/skeletons/PageHeaderSkeleton";
 
 const levelNames: Record<string, string> = {
   operaciones: "Operaciones",
@@ -19,8 +21,9 @@ export default function MyCourses() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div>
+        <PageHeaderSkeleton titleWidth="w-32" descriptionWidth="w-64" />
+        <CourseListSkeleton count={3} />
       </div>
     );
   }

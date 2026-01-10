@@ -2,10 +2,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMyEnrollments } from "@/hooks/useCourses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Trophy, Clock, TrendingUp } from "lucide-react";
+import { DashboardSkeleton } from "@/components/skeletons/DashboardSkeleton";
 
 export default function DashboardHome() {
-  const { profile, role } = useAuth();
-  const { data: enrollments } = useMyEnrollments();
+  const { profile, role, loading: authLoading } = useAuth();
+  const { data: enrollments, isLoading: enrollmentsLoading } = useMyEnrollments();
+
+  const isLoading = authLoading || enrollmentsLoading;
 
   const stats = [
     { title: "Cursos Inscritos", value: enrollments?.length || 0, icon: BookOpen, color: "text-primary" },
@@ -13,6 +16,10 @@ export default function DashboardHome() {
     { title: "Horas de Estudio", value: "0", icon: Clock, color: "text-secondary" },
     { title: "Progreso General", value: "0%", icon: TrendingUp, color: "text-accent" },
   ];
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div>
