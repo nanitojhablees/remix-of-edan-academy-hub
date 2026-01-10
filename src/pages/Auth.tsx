@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import logoEdan from "@/assets/logo-edan.png";
+import { PageTransition } from "@/components/PageTransition";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -85,101 +86,103 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6">
-          <ArrowLeft className="h-4 w-4" /> Volver al inicio
-        </Link>
+    <PageTransition>
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6">
+            <ArrowLeft className="h-4 w-4" /> Volver al inicio
+          </Link>
 
-        <div className="bg-card border border-border rounded-2xl p-8">
-          <div className="text-center mb-8">
-            <img src={logoEdan} alt="EDAN" className="h-16 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold">{isRegister ? "Crear Cuenta" : "Iniciar Sesión"}</h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              {isRegister ? "Únete al programa EDAN Latinoamérica" : "Accede a tu cuenta"}
+          <div className="bg-card border border-border rounded-2xl p-8">
+            <div className="text-center mb-8">
+              <img src={logoEdan} alt="EDAN" className="h-16 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold">{isRegister ? "Crear Cuenta" : "Iniciar Sesión"}</h1>
+              <p className="text-sm text-muted-foreground mt-2">
+                {isRegister ? "Únete al programa EDAN Latinoamérica" : "Accede a tu cuenta"}
+              </p>
+            </div>
+
+            {isRegister ? (
+              <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label>Nombre *</Label>
+                    <Input {...registerForm.register("first_name")} />
+                    {registerForm.formState.errors.first_name && (
+                      <p className="text-xs text-destructive mt-1">{registerForm.formState.errors.first_name.message}</p>
+                    )}
+                  </div>
+                  <div>
+                    <Label>Apellido *</Label>
+                    <Input {...registerForm.register("last_name")} />
+                    {registerForm.formState.errors.last_name && (
+                      <p className="text-xs text-destructive mt-1">{registerForm.formState.errors.last_name.message}</p>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <Label>Email *</Label>
+                  <Input type="email" {...registerForm.register("email")} />
+                  {registerForm.formState.errors.email && (
+                    <p className="text-xs text-destructive mt-1">{registerForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+                <div className="relative">
+                  <Label>Contraseña *</Label>
+                  <Input type={showPassword ? "text" : "password"} {...registerForm.register("password")} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-8 text-muted-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <div>
+                  <Label>País</Label>
+                  <Input {...registerForm.register("country")} placeholder="Ej: Colombia" />
+                </div>
+                <div>
+                  <Label>Profesión</Label>
+                  <Input {...registerForm.register("profession")} placeholder="Ej: Bombero, Paramédico" />
+                </div>
+                <div>
+                  <Label>Teléfono</Label>
+                  <Input {...registerForm.register("phone")} placeholder="+57 300 123 4567" />
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Crear Cuenta
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input type="email" {...loginForm.register("email")} />
+                  {loginForm.formState.errors.email && (
+                    <p className="text-xs text-destructive mt-1">{loginForm.formState.errors.email.message}</p>
+                  )}
+                </div>
+                <div className="relative">
+                  <Label>Contraseña</Label>
+                  <Input type={showPassword ? "text" : "password"} {...loginForm.register("password")} />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-8 text-muted-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                <Button type="submit" className="w-full" disabled={loading}>
+                  {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Iniciar Sesión
+                </Button>
+              </form>
+            )}
+
+            <p className="text-center text-sm text-muted-foreground mt-6">
+              {isRegister ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}{" "}
+              <button onClick={() => setIsRegister(!isRegister)} className="text-primary hover:underline font-medium">
+                {isRegister ? "Iniciar Sesión" : "Registrarse"}
+              </button>
             </p>
           </div>
-
-          {isRegister ? (
-            <form onSubmit={registerForm.handleSubmit(onRegister)} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Nombre *</Label>
-                  <Input {...registerForm.register("first_name")} />
-                  {registerForm.formState.errors.first_name && (
-                    <p className="text-xs text-destructive mt-1">{registerForm.formState.errors.first_name.message}</p>
-                  )}
-                </div>
-                <div>
-                  <Label>Apellido *</Label>
-                  <Input {...registerForm.register("last_name")} />
-                  {registerForm.formState.errors.last_name && (
-                    <p className="text-xs text-destructive mt-1">{registerForm.formState.errors.last_name.message}</p>
-                  )}
-                </div>
-              </div>
-              <div>
-                <Label>Email *</Label>
-                <Input type="email" {...registerForm.register("email")} />
-                {registerForm.formState.errors.email && (
-                  <p className="text-xs text-destructive mt-1">{registerForm.formState.errors.email.message}</p>
-                )}
-              </div>
-              <div className="relative">
-                <Label>Contraseña *</Label>
-                <Input type={showPassword ? "text" : "password"} {...registerForm.register("password")} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-8 text-muted-foreground">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <div>
-                <Label>País</Label>
-                <Input {...registerForm.register("country")} placeholder="Ej: Colombia" />
-              </div>
-              <div>
-                <Label>Profesión</Label>
-                <Input {...registerForm.register("profession")} placeholder="Ej: Bombero, Paramédico" />
-              </div>
-              <div>
-                <Label>Teléfono</Label>
-                <Input {...registerForm.register("phone")} placeholder="+57 300 123 4567" />
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Crear Cuenta
-              </Button>
-            </form>
-          ) : (
-            <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-4">
-              <div>
-                <Label>Email</Label>
-                <Input type="email" {...loginForm.register("email")} />
-                {loginForm.formState.errors.email && (
-                  <p className="text-xs text-destructive mt-1">{loginForm.formState.errors.email.message}</p>
-                )}
-              </div>
-              <div className="relative">
-                <Label>Contraseña</Label>
-                <Input type={showPassword ? "text" : "password"} {...loginForm.register("password")} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-8 text-muted-foreground">
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Iniciar Sesión
-              </Button>
-            </form>
-          )}
-
-          <p className="text-center text-sm text-muted-foreground mt-6">
-            {isRegister ? "¿Ya tienes cuenta?" : "¿No tienes cuenta?"}{" "}
-            <button onClick={() => setIsRegister(!isRegister)} className="text-primary hover:underline font-medium">
-              {isRegister ? "Iniciar Sesión" : "Registrarse"}
-            </button>
-          </p>
         </div>
       </div>
-    </div>
+    </PageTransition>
   );
 }

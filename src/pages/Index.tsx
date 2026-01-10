@@ -7,22 +7,25 @@ import { Testimonials } from "@/components/landing/Testimonials";
 import { Stats } from "@/components/landing/Stats";
 import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
+import { PageTransition } from "@/components/PageTransition";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main>
-        <Hero />
-        <About />
-        <Levels />
-        <Benefits />
-        <Stats />
-        <Testimonials />
-        <CTA />
-      </main>
-      <Footer />
-    </div>
+    <PageTransition>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <main>
+          <Hero />
+          <About />
+          <Levels />
+          <Benefits />
+          <Stats />
+          <Testimonials />
+          <CTA />
+        </main>
+        <Footer />
+      </div>
+    </PageTransition>
   );
 };
 
