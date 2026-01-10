@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Trophy, Star, Zap, Award, Target, Flame, Moon, Sunrise, Footprints, BookOpen, GraduationCap, UserCheck, Lock, RefreshCw } from "lucide-react";
 import { useEffect } from "react";
+import { AchievementsSkeleton } from "@/components/skeletons/AchievementsSkeleton";
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   award: Award,
@@ -40,11 +41,7 @@ export default function Achievements() {
   }, []);
 
   if (loadingAll || loadingUser) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <AchievementsSkeleton />;
   }
 
   const earnedBadgeIds = new Set(userBadges?.map(ub => ub.badge_id) || []);
