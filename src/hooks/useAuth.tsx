@@ -52,18 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchingRef = useRef(false);
   const lastFetchedUserId = useRef<string | null>(null);
 
-  const fetchProfileAndRole = useCallback(async (userId: string, force: boolean = false) => {
-    // Skip if already fetching, or already fetched for this user (unless forced)
+  const fetchProfileAndRole = useCallback(async (userId: string) => {
+    // Skip if already fetching
     if (fetchingRef.current) {
       return;
     }
     
-    if (!force && lastFetchedUserId.current === userId && profile) {
-      setLoading(false);
-      return;
-    }
-    
     fetchingRef.current = true;
+    setLoading(true);
     
     try {
       // Fetch profile and role in parallel
@@ -88,50 +84,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastFetchedUserId.current = userId;
     } catch (error) {
       console.error("Error fetching profile/role:", error);
-      // Reset on error to allow retry
       lastFetchedUserId.current = null;
     } finally {
       fetchingRef.current = false;
       setLoading(false);
     }
-  }, [profile]);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
 
-    // Get initial session
-    const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!mounted) return;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        await fetchProfileAndRole(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    };
-
-    initAuth();
-
-    // Listen for auth changes
+    // Set up auth state listener FIRST (per Supabase docs)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
+        
+        console.log("Auth event:", event, session?.user?.id);
         
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Force refetch on login events or user change
-          const forceRefetch = event === 'SIGNED_IN' || lastFetchedUserId.current !== session.user.id;
-          if (forceRefetch) {
-            lastFetchedUserId.current = null;
-          }
-          await fetchProfileAndRole(session.user.id, forceRefetch);
+          // Use setTimeout to avoid blocking the auth state update
+          setTimeout(async () => {
+            if (mounted && lastFetchedUserId.current !== session.user.id) {
+              await fetchProfileAndRole(session.user.id);
+            } else if (mounted) {
+              setLoading(false);
+            }
+          }, 0);
         } else {
           setProfile(null);
           setRole(null);
@@ -140,6 +121,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }
     );
+
+    // THEN get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
+      
+      setSession(session);
+      setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        fetchProfileAndRole(session.user.id);
+      } else {
+        setLoading(false);
+      }
+    });
 
     return () => {
       mounted = false;
