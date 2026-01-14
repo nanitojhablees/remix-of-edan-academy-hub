@@ -52,9 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const fetchingRef = useRef(false);
   const lastFetchedUserId = useRef<string | null>(null);
 
-  const fetchProfileAndRole = useCallback(async (userId: string) => {
-    // Skip if already fetching or already fetched for this user
-    if (fetchingRef.current || lastFetchedUserId.current === userId) {
+  const fetchProfileAndRole = useCallback(async (userId: string, force: boolean = false) => {
+    // Skip if already fetching, or already fetched for this user (unless forced)
+    if (fetchingRef.current) {
+      return;
+    }
+    
+    if (!force && lastFetchedUserId.current === userId && profile) {
+      setLoading(false);
       return;
     }
     
@@ -83,11 +88,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       lastFetchedUserId.current = userId;
     } catch (error) {
       console.error("Error fetching profile/role:", error);
+      // Reset on error to allow retry
+      lastFetchedUserId.current = null;
     } finally {
       fetchingRef.current = false;
       setLoading(false);
     }
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     let mounted = true;
@@ -119,11 +126,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Reset last fetched if user changed
-          if (lastFetchedUserId.current !== session.user.id) {
+          // Force refetch on login events or user change
+          const forceRefetch = event === 'SIGNED_IN' || lastFetchedUserId.current !== session.user.id;
+          if (forceRefetch) {
             lastFetchedUserId.current = null;
           }
-          await fetchProfileAndRole(session.user.id);
+          await fetchProfileAndRole(session.user.id, forceRefetch);
         } else {
           setProfile(null);
           setRole(null);
