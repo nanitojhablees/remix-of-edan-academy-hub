@@ -59,22 +59,6 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
-              <Route 
-                path="/instructor/*" 
-                element={
-                  <ProtectedRoute allowedRoles={["instructor", "admin"]} requireActiveMembership>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin/*" 
-                element={
-                  <ProtectedRoute allowedRoles={["admin"]} requireActiveMembership>
-                    <Dashboard />
-                  </ProtectedRoute>
-                } 
-              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
