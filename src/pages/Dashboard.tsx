@@ -1,6 +1,6 @@
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import DashboardHome from "./dashboard/DashboardHome";
 import MyCourses from "./dashboard/MyCourses";
 import CourseCatalog from "./dashboard/CourseCatalog";
@@ -31,6 +31,25 @@ import InstructorExamEditor from "./instructor/InstructorExamEditor";
 import { useAuth } from "@/hooks/useAuth";
 import { PageTransition } from "@/components/PageTransition";
 
+type AppRole = "admin" | "instructor" | "estudiante";
+
+// Role-based route protection component
+function RoleRoute({ 
+  children, 
+  allowedRoles 
+}: { 
+  children: React.ReactNode; 
+  allowedRoles: AppRole[] 
+}) {
+  const { role } = useAuth();
+  
+  if (!role || !allowedRoles.includes(role)) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return <>{children}</>;
+}
+
 export default function Dashboard() {
   const { role } = useAuth();
 
@@ -56,7 +75,7 @@ export default function Dashboard() {
               <Route index element={getHomeComponent()} />
               <Route path="profile" element={<Profile />} />
               
-              {/* Student Routes */}
+              {/* Student Routes (all authenticated users can access) */}
               <Route path="my-courses" element={<MyCourses />} />
               <Route path="catalog" element={<CourseCatalog />} />
               <Route path="course/:courseId" element={<CourseView />} />
@@ -64,26 +83,89 @@ export default function Dashboard() {
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="certificates" element={<Certificates />} />
               <Route path="payment-history" element={<PaymentHistory />} />
-              
-              {/* Instructor Routes */}
-              <Route path="instructor-courses" element={<InstructorCourses />} />
-              <Route path="instructor-students" element={<InstructorStudents />} />
-              <Route path="instructor-exams" element={<InstructorExams />} />
-              <Route path="course-editor/:courseId" element={<InstructorCourseEditor />} />
-              <Route path="exam-editor/:examId" element={<InstructorExamEditor />} />
               <Route path="exam/:examId" element={<ExamView />} />
               
+              {/* Instructor Routes */}
+              <Route path="instructor-courses" element={
+                <RoleRoute allowedRoles={["instructor", "admin"]}>
+                  <InstructorCourses />
+                </RoleRoute>
+              } />
+              <Route path="instructor-students" element={
+                <RoleRoute allowedRoles={["instructor", "admin"]}>
+                  <InstructorStudents />
+                </RoleRoute>
+              } />
+              <Route path="instructor-exams" element={
+                <RoleRoute allowedRoles={["instructor", "admin"]}>
+                  <InstructorExams />
+                </RoleRoute>
+              } />
+              <Route path="course-editor/:courseId" element={
+                <RoleRoute allowedRoles={["instructor", "admin"]}>
+                  <InstructorCourseEditor />
+                </RoleRoute>
+              } />
+              <Route path="exam-editor/:examId" element={
+                <RoleRoute allowedRoles={["instructor", "admin"]}>
+                  <InstructorExamEditor />
+                </RoleRoute>
+              } />
+              
               {/* Admin Routes */}
-              <Route path="admin-users" element={<UsersManagement />} />
-              <Route path="admin-courses" element={<CoursesManagement />} />
-              <Route path="admin-settings" element={<AdminSettings />} />
-              <Route path="admin-analytics" element={<AdvancedAnalytics />} />
-              <Route path="admin-exams" element={<ExamsManagement />} />
-              <Route path="admin-certificates" element={<CertificatesManagement />} />
-              <Route path="admin-badges" element={<BadgesManagement />} />
-              <Route path="admin-enrollments" element={<EnrollmentsManagement />} />
-              <Route path="admin-notifications" element={<NotificationsManagement />} />
-              <Route path="admin-payments" element={<PaymentsManagement />} />
+              <Route path="admin-users" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <UsersManagement />
+                </RoleRoute>
+              } />
+              <Route path="admin-courses" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <CoursesManagement />
+                </RoleRoute>
+              } />
+              <Route path="admin-settings" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <AdminSettings />
+                </RoleRoute>
+              } />
+              <Route path="admin-analytics" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <AdvancedAnalytics />
+                </RoleRoute>
+              } />
+              <Route path="admin-exams" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <ExamsManagement />
+                </RoleRoute>
+              } />
+              <Route path="admin-certificates" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <CertificatesManagement />
+                </RoleRoute>
+              } />
+              <Route path="admin-badges" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <BadgesManagement />
+                </RoleRoute>
+              } />
+              <Route path="admin-enrollments" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <EnrollmentsManagement />
+                </RoleRoute>
+              } />
+              <Route path="admin-notifications" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <NotificationsManagement />
+                </RoleRoute>
+              } />
+              <Route path="admin-payments" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <PaymentsManagement />
+                </RoleRoute>
+              } />
+              
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>
         </div>
