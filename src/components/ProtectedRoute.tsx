@@ -11,7 +11,7 @@ export function ProtectedRoute({
   children, 
   requireActiveMembership = false 
 }: ProtectedRouteProps) {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, role, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -24,6 +24,11 @@ export function ProtectedRoute({
 
   if (!user) {
     return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  // Check if user account is suspended (admins bypass this check)
+  if (profile?.membership_status === "suspended" && role !== "admin") {
+    return <Navigate to="/account-suspended" replace />;
   }
 
   // Check membership status for payment flow

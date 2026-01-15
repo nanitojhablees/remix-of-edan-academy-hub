@@ -13,6 +13,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Auth = lazy(() => import("./pages/Auth"));
 const Payment = lazy(() => import("./pages/Payment"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const AccountSuspended = lazy(() => import("./pages/AccountSuspended"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -59,6 +60,7 @@ const App = () => (
                   </ProtectedRoute>
                 } 
               />
+              <Route path="/account-suspended" element={<AccountSuspended />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
