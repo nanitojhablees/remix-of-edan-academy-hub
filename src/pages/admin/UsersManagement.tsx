@@ -76,18 +76,46 @@ export default function UsersManagement() {
     },
   });
 
+  const sendSuspensionEmail = async (userId: string, userName: string) => {
+    try {
+      const response = await supabase.functions.invoke("send-suspension-email", {
+        body: { userId, userName },
+      });
+
+      if (response.error) {
+        console.error("Failed to send suspension email:", response.error);
+      } else {
+        console.log("Suspension email sent successfully");
+      }
+    } catch (error) {
+      console.error("Error sending suspension email:", error);
+    }
+  };
+
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ userId, status }: { userId: string; status: string }) => {
+    mutationFn: async ({ userId, status, userName }: { 
+      userId: string; 
+      status: string; 
+      userName: string;
+    }) => {
       const { error } = await supabase
         .from("profiles")
         .update({ membership_status: status })
         .eq("user_id", userId);
 
       if (error) throw error;
+
+      // Send email notification if suspending
+      if (status === "suspended") {
+        await sendSuspensionEmail(userId, userName);
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
-      toast({ title: "Estado actualizado", description: "El estado de membresía ha sido cambiado." });
+      const message = variables.status === "suspended" 
+        ? "Usuario suspendido. Se ha enviado notificación por email."
+        : "El estado de membresía ha sido cambiado.";
+      toast({ title: "Estado actualizado", description: message });
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -277,7 +305,8 @@ export default function UsersManagement() {
                                   defaultValue={user.membership_status || "pending"}
                                   onValueChange={(value) => updateStatusMutation.mutate({ 
                                     userId: user.user_id, 
-                                    status: value 
+                                    status: value,
+                                    userName: `${user.first_name} ${user.last_name}`
                                   })}
                                 >
                                   <SelectTrigger>
