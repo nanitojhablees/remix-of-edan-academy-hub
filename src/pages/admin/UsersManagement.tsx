@@ -162,6 +162,9 @@ export default function UsersManagement() {
                 <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="active">Activo</SelectItem>
                 <SelectItem value="pending">Pendiente</SelectItem>
+                <SelectItem value="suspended">Suspendido</SelectItem>
+                <SelectItem value="expired">Vencido</SelectItem>
+                <SelectItem value="cancelled">Cancelado</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -218,8 +221,17 @@ export default function UsersManagement() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={user.membership_status === "active" ? "default" : "secondary"}>
-                          {user.membership_status === "active" ? "Activo" : "Pendiente"}
+                        <Badge variant={
+                          user.membership_status === "active" ? "default" : 
+                          user.membership_status === "suspended" ? "destructive" : 
+                          "secondary"
+                        }>
+                          {user.membership_status === "active" ? "Activo" : 
+                           user.membership_status === "pending" ? "Pendiente" :
+                           user.membership_status === "suspended" ? "Suspendido" :
+                           user.membership_status === "expired" ? "Vencido" :
+                           user.membership_status === "cancelled" ? "Cancelado" : 
+                           user.membership_status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
@@ -274,6 +286,9 @@ export default function UsersManagement() {
                                   <SelectContent>
                                     <SelectItem value="pending">Pendiente</SelectItem>
                                     <SelectItem value="active">Activo</SelectItem>
+                                    <SelectItem value="suspended">Suspendido</SelectItem>
+                                    <SelectItem value="expired">Vencido</SelectItem>
+                                    <SelectItem value="cancelled">Cancelado</SelectItem>
                                   </SelectContent>
                                 </Select>
                               </div>
