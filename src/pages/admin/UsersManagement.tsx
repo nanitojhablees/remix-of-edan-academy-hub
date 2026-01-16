@@ -81,22 +81,29 @@ export default function UsersManagement() {
       const response = await supabase.functions.invoke("send-suspension-email", {
         body: { userId, userName },
       });
-
-      if (response.error) {
-        console.error("Failed to send suspension email:", response.error);
-      } else {
-        console.log("Suspension email sent successfully");
-      }
+      if (response.error) console.error("Failed to send suspension email:", response.error);
     } catch (error) {
       console.error("Error sending suspension email:", error);
     }
   };
 
+  const sendReactivationEmail = async (userId: string, userName: string, previousStatus: string) => {
+    try {
+      const response = await supabase.functions.invoke("send-reactivation-email", {
+        body: { userId, userName, previousStatus },
+      });
+      if (response.error) console.error("Failed to send reactivation email:", response.error);
+    } catch (error) {
+      console.error("Error sending reactivation email:", error);
+    }
+  };
+
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ userId, status, userName }: { 
+    mutationFn: async ({ userId, status, userName, previousStatus }: { 
       userId: string; 
       status: string; 
       userName: string;
+      previousStatus: string;
     }) => {
       const { error } = await supabase
         .from("profiles")
@@ -105,15 +112,19 @@ export default function UsersManagement() {
 
       if (error) throw error;
 
-      // Send email notification if suspending
+      // Send appropriate email notification
       if (status === "suspended") {
         await sendSuspensionEmail(userId, userName);
+      } else if (status === "active" && ["suspended", "expired", "cancelled"].includes(previousStatus)) {
+        await sendReactivationEmail(userId, userName, previousStatus);
       }
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["admin-users"] });
       const message = variables.status === "suspended" 
         ? "Usuario suspendido. Se ha enviado notificación por email."
+        : variables.status === "active" && ["suspended", "expired", "cancelled"].includes(variables.previousStatus)
+        ? "Usuario reactivado. Se ha enviado notificación por email."
         : "El estado de membresía ha sido cambiado.";
       toast({ title: "Estado actualizado", description: message });
     },
@@ -306,7 +317,8 @@ export default function UsersManagement() {
                                   onValueChange={(value) => updateStatusMutation.mutate({ 
                                     userId: user.user_id, 
                                     status: value,
-                                    userName: `${user.first_name} ${user.last_name}`
+                                    userName: `${user.first_name} ${user.last_name}`,
+                                    previousStatus: user.membership_status || "pending"
                                   })}
                                 >
                                   <SelectTrigger>
