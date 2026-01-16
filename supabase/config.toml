@@ -11,3 +11,21 @@ verify_jwt = false
 
 [functions.send-suspension-email]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-payment-confirmation]
+verify_jwt = false
+
+[functions.send-expiring-notification]
+verify_jwt = false
+
+[functions.send-expired-notification]
+verify_jwt = false
+
+[functions.send-reactivation-email]
+verify_jwt = false
+
+[functions.send-renewal-email]
+verify_jwt = false

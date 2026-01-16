@@ -393,7 +393,7 @@ export function useRenewSubscription() {
 
   return useMutation({
     mutationFn: async ({ subscriptionId, months }: { subscriptionId: string; months: number }) => {
-      // Get the subscription
+      // Get the subscription with profile
       const { data: sub, error: fetchError } = await supabase
         .from("subscriptions")
         .select("*, plan:payment_plans(*)")
@@ -401,6 +401,13 @@ export function useRenewSubscription() {
         .single();
 
       if (fetchError) throw fetchError;
+
+      // Get user profile for email
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("user_id", sub.user_id)
+        .single();
 
       // Calculate new expiration
       const currentExpiry = sub.expires_at ? new Date(sub.expires_at) : new Date();
@@ -426,6 +433,18 @@ export function useRenewSubscription() {
 
       if (profileError) throw profileError;
 
+      // Send renewal email
+      if (profile) {
+        await supabase.functions.invoke("send-renewal-email", {
+          body: {
+            userId: sub.user_id,
+            userName: `${profile.first_name} ${profile.last_name}`,
+            newExpiresAt: newExpiry.toISOString(),
+            months,
+          },
+        });
+      }
+
       return { newExpiry };
     },
     onSuccess: (data) => {
@@ -433,7 +452,7 @@ export function useRenewSubscription() {
       queryClient.invalidateQueries({ queryKey: ["admin-payments"] });
       toast({ 
         title: "Suscripción renovada", 
-        description: `La suscripción se ha renovado hasta ${new Date(data.newExpiry).toLocaleDateString()}.` 
+        description: `La suscripción se ha renovado hasta ${new Date(data.newExpiry).toLocaleDateString()}. Se envió email de confirmación.` 
       });
     },
     onError: (error: Error) => {
