@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CreditCard, Check, Shield, Loader2 } from "lucide-react";
 import logoEdan from "@/assets/logo-edan.png";
 import { PageTransition } from "@/components/PageTransition";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Payment() {
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,20 @@ export default function Payment() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "¡Pago exitoso!", description: "Tu membresía ha sido activada." });
+      
+      // Send payment confirmation email (fire and forget)
+      if (profile) {
+        supabase.functions.invoke("send-payment-confirmation", {
+          body: {
+            userName: `${profile.first_name} ${profile.last_name}`,
+            planName: "Membresía EDAN Anual",
+            amount: 99,
+            currency: "USD",
+            expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+          },
+        }).catch((err) => console.error("Error sending payment confirmation email:", err));
+      }
+      
       navigate("/dashboard");
     }
   };
