@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, ArrowLeft, Eye, EyeOff } from "lucide-react";
 import logoEdan from "@/assets/logo-edan.png";
 import { PageTransition } from "@/components/PageTransition";
+import { supabase } from "@/integrations/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -82,6 +83,14 @@ export default function Auth() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "¡Registro exitoso!", description: "Ahora completa el pago de membresía." });
+      
+      // Send welcome email (fire and forget - don't block registration flow)
+      supabase.functions.invoke("send-welcome-email", {
+        body: {
+          userEmail: data.email,
+          userName: `${data.first_name} ${data.last_name}`,
+        },
+      }).catch((err) => console.error("Error sending welcome email:", err));
     }
   };
 
