@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,10 +16,14 @@ interface WelcomeEmailRequest {
   userName: string;
 }
 
+const EMAIL_TYPE = "welcome";
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
     const { email, userName }: WelcomeEmailRequest = await req.json();
@@ -25,6 +32,31 @@ const handler = async (req: Request): Promise<Response> => {
       return new Response(
         JSON.stringify({ error: "Missing required fields: email, userName" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Check if email type is enabled
+    const { data: settings } = await supabaseAdmin
+      .from("email_settings")
+      .select("enabled, subject, sender_name, sender_email")
+      .eq("email_type", EMAIL_TYPE)
+      .single();
+
+    if (!settings?.enabled) {
+      console.log(`Email type ${EMAIL_TYPE} is disabled, skipping`);
+      
+      // Log skipped email
+      await supabaseAdmin.from("email_logs").insert({
+        email_type: EMAIL_TYPE,
+        recipient_email: email,
+        recipient_name: userName,
+        status: "skipped",
+        error_message: "Email type disabled",
+      });
+
+      return new Response(
+        JSON.stringify({ success: true, skipped: true, reason: "Email type disabled" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
@@ -80,9 +112,9 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "EDAN <onboarding@resend.dev>",
+        from: `${settings.sender_name} <${settings.sender_email}>`,
         to: [email],
-        subject: "¡Bienvenido a EDAN! 🎓",
+        subject: settings.subject,
         html: emailHtml,
       }),
     });
@@ -90,8 +122,24 @@ const handler = async (req: Request): Promise<Response> => {
     const emailData = await emailResponse.json();
 
     if (!emailResponse.ok) {
+      // Log error
+      await supabaseAdmin.from("email_logs").insert({
+        email_type: EMAIL_TYPE,
+        recipient_email: email,
+        recipient_name: userName,
+        status: "error",
+        error_message: emailData.message || "Failed to send email",
+      });
       throw new Error(emailData.message || "Failed to send email");
     }
+
+    // Log success
+    await supabaseAdmin.from("email_logs").insert({
+      email_type: EMAIL_TYPE,
+      recipient_email: email,
+      recipient_name: userName,
+      status: "sent",
+    });
 
     console.log("Welcome email sent successfully:", emailData);
 
