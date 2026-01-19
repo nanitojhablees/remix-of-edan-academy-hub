@@ -17,11 +17,14 @@ interface SuspensionEmailRequest {
   reason?: string;
 }
 
+const EMAIL_TYPE = "suspension";
+
 const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
   try {
     const { userId, userName, reason }: SuspensionEmailRequest = await req.json();
@@ -29,29 +32,42 @@ const handler = async (req: Request): Promise<Response> => {
     if (!userId || !userName) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: userId, userName" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Get user email from auth.users using service role
-    const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    // Get user email
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserById(userId);
-
     if (userError || !userData?.user?.email) {
-      console.error("Failed to get user email:", userError);
       return new Response(
         JSON.stringify({ error: "Could not retrieve user email" }),
-        {
-          status: 400,
-          headers: { "Content-Type": "application/json", ...corsHeaders },
-        }
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
-
     const userEmail = userData.user.email;
+
+    // Check if email type is enabled
+    const { data: settings } = await supabaseAdmin
+      .from("email_settings")
+      .select("enabled, subject, sender_name, sender_email")
+      .eq("email_type", EMAIL_TYPE)
+      .single();
+
+    if (!settings?.enabled) {
+      console.log(`Email type ${EMAIL_TYPE} is disabled, skipping`);
+      await supabaseAdmin.from("email_logs").insert({
+        email_type: EMAIL_TYPE,
+        recipient_email: userEmail,
+        recipient_name: userName,
+        user_id: userId,
+        status: "skipped",
+        error_message: "Email type disabled",
+      });
+      return new Response(
+        JSON.stringify({ success: true, skipped: true, reason: "Email type disabled" }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -105,9 +121,9 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "EDAN <onboarding@resend.dev>",
+        from: `${settings.sender_name} <${settings.sender_email}>`,
         to: [userEmail],
-        subject: "Notificación sobre tu cuenta - EDAN",
+        subject: settings.subject,
         html: emailHtml,
       }),
     });
@@ -115,8 +131,24 @@ const handler = async (req: Request): Promise<Response> => {
     const emailData = await emailResponse.json();
 
     if (!emailResponse.ok) {
+      await supabaseAdmin.from("email_logs").insert({
+        email_type: EMAIL_TYPE,
+        recipient_email: userEmail,
+        recipient_name: userName,
+        user_id: userId,
+        status: "error",
+        error_message: emailData.message || "Failed to send email",
+      });
       throw new Error(emailData.message || "Failed to send email");
     }
+
+    await supabaseAdmin.from("email_logs").insert({
+      email_type: EMAIL_TYPE,
+      recipient_email: userEmail,
+      recipient_name: userName,
+      user_id: userId,
+      status: "sent",
+    });
 
     console.log("Suspension email sent successfully:", emailData);
 
@@ -128,10 +160,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.error("Error in send-suspension-email function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
 };

@@ -6,27 +6,41 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const NOTIFICATION_DAYS = [7, 3, 1]; // Days before expiration to notify
+const NOTIFICATION_DAYS = [7, 3, 1];
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-// Helper to send expiring notification email
 async function sendExpiringEmail(
   supabase: any,
   userId: string,
   userName: string,
+  userEmail: string,
   daysRemaining: number,
   expiresAt: string,
   planName: string
 ): Promise<void> {
   try {
-    // Get user email from auth.users
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-    if (userError || !userData?.user?.email) {
-      console.error("Could not get user email for expiring notification:", userError);
+    // Check if email type is enabled
+    const { data: settings } = await supabase
+      .from("email_settings")
+      .select("enabled, subject, sender_name, sender_email")
+      .eq("email_type", "expiring_notification")
+      .single();
+
+    if (!settings?.enabled) {
+      console.log("Expiring notification email is disabled, skipping");
+      await supabase.from("email_logs").insert({
+        email_type: "expiring_notification",
+        recipient_email: userEmail,
+        recipient_name: userName,
+        user_id: userId,
+        status: "skipped",
+        error_message: "Email type disabled",
+      });
       return;
     }
 
-    const userEmail = userData.user.email;
     const expiresDate = new Date(expiresAt);
 
     const emailHtml = `
@@ -89,9 +103,9 @@ async function sendExpiringEmail(
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "EDAN <onboarding@resend.dev>",
+        from: `${settings.sender_name} <${settings.sender_email}>`,
         to: [userEmail],
-        subject: `⏰ Tu suscripción vence en ${daysRemaining} ${daysRemaining === 1 ? 'día' : 'días'} - EDAN`,
+        subject: settings.subject,
         html: emailHtml,
       }),
     });
@@ -99,29 +113,55 @@ async function sendExpiringEmail(
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Error sending expiring email:", errorData);
+      await supabase.from("email_logs").insert({
+        email_type: "expiring_notification",
+        recipient_email: userEmail,
+        recipient_name: userName,
+        user_id: userId,
+        status: "error",
+        error_message: errorData.message || "Failed to send email",
+      });
     } else {
       console.log(`Expiring notification email sent to ${userEmail}`);
+      await supabase.from("email_logs").insert({
+        email_type: "expiring_notification",
+        recipient_email: userEmail,
+        recipient_name: userName,
+        user_id: userId,
+        status: "sent",
+      });
     }
   } catch (error) {
     console.error("Error in sendExpiringEmail:", error);
   }
 }
 
-// Helper to send expired notification email
 async function sendExpiredEmail(
   supabase: any,
   userId: string,
-  userName: string
+  userName: string,
+  userEmail: string
 ): Promise<void> {
   try {
-    // Get user email from auth.users
-    const { data: userData, error: userError } = await supabase.auth.admin.getUserById(userId);
-    if (userError || !userData?.user?.email) {
-      console.error("Could not get user email for expired notification:", userError);
+    // Check if email type is enabled
+    const { data: settings } = await supabase
+      .from("email_settings")
+      .select("enabled, subject, sender_name, sender_email")
+      .eq("email_type", "expired_notification")
+      .single();
+
+    if (!settings?.enabled) {
+      console.log("Expired notification email is disabled, skipping");
+      await supabase.from("email_logs").insert({
+        email_type: "expired_notification",
+        recipient_email: userEmail,
+        recipient_name: userName,
+        user_id: userId,
+        status: "skipped",
+        error_message: "Email type disabled",
+      });
       return;
     }
-
-    const userEmail = userData.user.email;
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -183,9 +223,9 @@ async function sendExpiredEmail(
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "EDAN <onboarding@resend.dev>",
+        from: `${settings.sender_name} <${settings.sender_email}>`,
         to: [userEmail],
-        subject: "❌ Tu suscripción ha expirado - EDAN",
+        subject: settings.subject,
         html: emailHtml,
       }),
     });
@@ -193,8 +233,23 @@ async function sendExpiredEmail(
     if (!response.ok) {
       const errorData = await response.json();
       console.error("Error sending expired email:", errorData);
+      await supabase.from("email_logs").insert({
+        email_type: "expired_notification",
+        recipient_email: userEmail,
+        recipient_name: userName,
+        user_id: userId,
+        status: "error",
+        error_message: errorData.message || "Failed to send email",
+      });
     } else {
       console.log(`Expired notification email sent to ${userEmail}`);
+      await supabase.from("email_logs").insert({
+        email_type: "expired_notification",
+        recipient_email: userEmail,
+        recipient_name: userName,
+        user_id: userId,
+        status: "sent",
+      });
     }
   } catch (error) {
     console.error("Error in sendExpiredEmail:", error);
@@ -202,7 +257,6 @@ async function sendExpiredEmail(
 }
 
 serve(async (req: Request) => {
-  // Handle CORS preflight
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -210,10 +264,7 @@ serve(async (req: Request) => {
   try {
     console.log("Starting subscription expiration check...");
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const now = new Date();
     const results = {
@@ -222,12 +273,10 @@ serve(async (req: Request) => {
       errors: [] as string[],
     };
 
-    // Check for each notification threshold
     for (const days of NOTIFICATION_DAYS) {
       const targetDate = new Date(now);
       targetDate.setDate(targetDate.getDate() + days);
       
-      // Get start and end of target day
       const startOfDay = new Date(targetDate);
       startOfDay.setHours(0, 0, 0, 0);
       
@@ -236,7 +285,6 @@ serve(async (req: Request) => {
 
       console.log(`Checking subscriptions expiring in ${days} days (${startOfDay.toISOString()} - ${endOfDay.toISOString()})`);
 
-      // Fetch active subscriptions expiring on target date
       const { data: subscriptions, error: subError } = await supabase
         .from("subscriptions")
         .select(`
@@ -260,12 +308,8 @@ serve(async (req: Request) => {
 
       if (!subscriptions || subscriptions.length === 0) continue;
 
-      // Process each subscription
       for (const sub of subscriptions) {
         try {
-          // Check if notification already exists for this subscription and day threshold
-          const notificationKey = `sub_expiring_${sub.id}_${days}d`;
-          
           const { data: existingNotification } = await supabase
             .from("notifications")
             .select("id")
@@ -280,18 +324,20 @@ serve(async (req: Request) => {
             continue;
           }
 
-          // Get user profile for personalization
           const { data: profile } = await supabase
             .from("profiles")
             .select("first_name, last_name")
             .eq("user_id", sub.user_id)
             .single();
 
+          // Get user email
+          const { data: userData } = await supabase.auth.admin.getUserById(sub.user_id);
+          const userEmail = userData?.user?.email;
+
           const expiresDate = new Date(sub.expires_at!);
           const planName = (sub.plan as any)?.name || "tu suscripción";
           const userName = profile ? `${profile.first_name} ${profile.last_name}` : "";
           
-          // Create notification
           const { error: notifError } = await supabase
             .from("notifications")
             .insert({
@@ -314,15 +360,17 @@ serve(async (req: Request) => {
             results.notified++;
             console.log(`Notification sent for subscription ${sub.id} (${days} days before expiration)`);
             
-            // Also send email notification
-            await sendExpiringEmail(
-              supabase,
-              sub.user_id,
-              userName,
-              days,
-              sub.expires_at!,
-              planName
-            );
+            if (userEmail) {
+              await sendExpiringEmail(
+                supabase,
+                sub.user_id,
+                userName,
+                userEmail,
+                days,
+                sub.expires_at!,
+                planName
+              );
+            }
           }
         } catch (err) {
           console.error(`Error processing subscription ${sub.id}:`, err);
@@ -331,7 +379,6 @@ serve(async (req: Request) => {
       }
     }
 
-    // Also check for expired subscriptions and update their status
     console.log("Checking for newly expired subscriptions...");
     
     const { data: expiredSubs, error: expiredError } = await supabase
@@ -347,28 +394,28 @@ serve(async (req: Request) => {
       console.log(`Found ${expiredSubs.length} expired subscriptions to update`);
       
       for (const expired of expiredSubs) {
-        // Get user profile for email
         const { data: profile } = await supabase
           .from("profiles")
           .select("first_name, last_name")
           .eq("user_id", expired.user_id)
           .single();
         
+        // Get user email
+        const { data: userData } = await supabase.auth.admin.getUserById(expired.user_id);
+        const userEmail = userData?.user?.email;
+        
         const userName = profile ? `${profile.first_name} ${profile.last_name}` : "";
 
-        // Update subscription status
         await supabase
           .from("subscriptions")
           .update({ status: "expired" })
           .eq("id", expired.id);
 
-        // Update profile membership status
         await supabase
           .from("profiles")
           .update({ membership_status: "expired" })
           .eq("user_id", expired.user_id);
 
-        // Send expiration notification (in-app)
         await supabase
           .from("notifications")
           .insert({
@@ -379,8 +426,9 @@ serve(async (req: Request) => {
             link: "/payment",
           });
         
-        // Send expiration email
-        await sendExpiredEmail(supabase, expired.user_id, userName);
+        if (userEmail) {
+          await sendExpiredEmail(supabase, expired.user_id, userName, userEmail);
+        }
       }
       
       console.log(`Updated ${expiredSubs.length} expired subscriptions`);
