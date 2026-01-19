@@ -186,6 +186,75 @@ export type Database = {
         }
         Relationships: []
       }
+      email_logs: {
+        Row: {
+          email_type: string
+          error_message: string | null
+          id: string
+          recipient_email: string
+          recipient_name: string | null
+          sent_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          email_type: string
+          error_message?: string | null
+          id?: string
+          recipient_email: string
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          recipient_email?: string
+          recipient_name?: string | null
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      email_settings: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          email_type: string
+          enabled: boolean | null
+          id: string
+          sender_email: string | null
+          sender_name: string | null
+          subject: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          email_type: string
+          enabled?: boolean | null
+          id?: string
+          sender_email?: string | null
+          sender_name?: string | null
+          subject: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          email_type?: string
+          enabled?: boolean | null
+          id?: string
+          sender_email?: string | null
+          sender_name?: string | null
+          subject?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       enrollments: {
         Row: {
           completed_at: string | null
