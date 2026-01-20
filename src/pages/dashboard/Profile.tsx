@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Phone, MapPin, Briefcase, Save, Key, CreditCard, Calendar, CheckCircle, Clock, XCircle, AlertTriangle, Receipt, ChevronRight } from "lucide-react";
+import { User, Mail, Phone, MapPin, Briefcase, Save, Key, CreditCard, Calendar, CheckCircle, Clock, XCircle, AlertTriangle, Receipt, ChevronRight, RefreshCw } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { MembershipAlert } from "@/components/dashboard/MembershipAlert";
 
 interface ActiveSubscription {
   id: string;
@@ -102,12 +104,22 @@ const formatCurrency = (amount: number, currency: string) => {
 export default function Profile() {
   const { user, profile } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [showPasswordDialog, setShowPasswordDialog] = useState(false);
   
   const { data: activeSubscription, isLoading: loadingSubscription } = useActiveSubscription(user?.id);
   const { data: paymentStats, isLoading: loadingStats } = usePaymentStats(user?.id);
+
+  const daysRemaining = activeSubscription?.expires_at 
+    ? differenceInDays(new Date(activeSubscription.expires_at), new Date())
+    : null;
+  
+  // Calculate progress for membership bar (assuming 365 days max)
+  const membershipProgress = daysRemaining !== null && daysRemaining > 0
+    ? Math.min(100, (daysRemaining / 365) * 100)
+    : 0;
   
   const [formData, setFormData] = useState({
     first_name: profile?.first_name || "",
@@ -229,18 +241,60 @@ export default function Profile() {
         </CardContent>
       </Card>
 
+      {/* Membership Alert */}
+      {activeSubscription && (
+        <MembershipAlert 
+          expiresAt={activeSubscription.expires_at} 
+          status={activeSubscription.status}
+          className="mb-6"
+        />
+      )}
+
       {/* Membership & Payment Section */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Membresía y Pagos
-          </CardTitle>
-          <CardDescription>
-            Estado de tu suscripción y resumen de pagos
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Membresía y Pagos
+              </CardTitle>
+              <CardDescription>
+                Estado de tu suscripción y resumen de pagos
+              </CardDescription>
+            </div>
+            <Button onClick={() => navigate("/dashboard/renew")} size="sm" variant="outline" className="gap-2">
+              <RefreshCw className="h-4 w-4" />
+              Renovar
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Days Remaining Progress */}
+          {daysRemaining !== null && daysRemaining > 0 && (
+            <div className="p-4 rounded-lg bg-muted/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">Días restantes de membresía</span>
+                <span className={`text-lg font-bold ${
+                  daysRemaining <= 7 ? "text-destructive" : 
+                  daysRemaining <= 30 ? "text-[hsl(var(--edan-orange))]" : "text-primary"
+                }`}>
+                  {daysRemaining} días
+                </span>
+              </div>
+              <Progress 
+                value={membershipProgress} 
+                className={`h-2 ${
+                  daysRemaining <= 7 ? "[&>div]:bg-destructive" : 
+                  daysRemaining <= 30 ? "[&>div]:bg-[hsl(var(--edan-orange))]" : ""
+                }`}
+              />
+              <p className="text-xs text-muted-foreground">
+                Vence el {format(new Date(activeSubscription!.expires_at!), "d 'de' MMMM, yyyy", { locale: es })}
+              </p>
+            </div>
+          )}
+
           {/* Subscription Status */}
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="p-4 rounded-lg bg-muted/50 space-y-2">
