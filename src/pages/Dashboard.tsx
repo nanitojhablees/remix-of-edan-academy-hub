@@ -10,6 +10,7 @@ import Achievements from "./dashboard/Achievements";
 import Leaderboard from "./dashboard/Leaderboard";
 import Certificates from "./dashboard/Certificates";
 import PaymentHistory from "./dashboard/PaymentHistory";
+import RenewMembership from "./dashboard/RenewMembership";
 import ExamView from "./dashboard/ExamView";
 import AdminDashboard from "./admin/AdminDashboard";
 import UsersManagement from "./admin/UsersManagement";
@@ -83,6 +84,7 @@ export default function Dashboard() {
               <Route path="leaderboard" element={<Leaderboard />} />
               <Route path="certificates" element={<Certificates />} />
               <Route path="payment-history" element={<PaymentHistory />} />
+              <Route path="renew" element={<RenewMembership />} />
               <Route path="exam/:examId" element={<ExamView />} />
               
               {/* Instructor Routes */}
