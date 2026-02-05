@@ -718,6 +718,8 @@ export type Database = {
           created_at: string
           first_name: string
           id: string
+          last_ip_address: string | null
+          last_login: string | null
           last_name: string
           membership_status: string | null
           phone: string | null
@@ -731,6 +733,8 @@ export type Database = {
           created_at?: string
           first_name: string
           id?: string
+          last_ip_address?: string | null
+          last_login?: string | null
           last_name: string
           membership_status?: string | null
           phone?: string | null
@@ -744,6 +748,8 @@ export type Database = {
           created_at?: string
           first_name?: string
           id?: string
+          last_ip_address?: string | null
+          last_login?: string | null
           last_name?: string
           membership_status?: string | null
           phone?: string | null

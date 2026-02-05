@@ -15,6 +15,8 @@ interface Profile {
   membership_status: string;
   created_at: string;
   updated_at: string;
+  last_login: string | null;
+  last_ip_address: string | null;
 }
 
 interface AuthContextType {
@@ -142,6 +144,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, [fetchProfileAndRole]);
 
+  // Track login with IP address
+  const trackLogin = useCallback(async (userId: string) => {
+    try {
+      // Get IP address from external API
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      const { ip } = await ipResponse.json();
+      
+      // Update profile with last login info
+      await supabase
+        .from('profiles')
+        .update({
+          last_login: new Date().toISOString(),
+          last_ip_address: ip
+        })
+        .eq('user_id', userId);
+    } catch (error) {
+      console.error('Error tracking login:', error);
+    }
+  }, []);
+
   const signUp = async (
     email: string,
     password: string,
@@ -180,6 +202,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) throw error;
+      
+      // Track login after successful sign in
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        trackLogin(user.id);
+      }
+      
       return { error: null };
     } catch (error) {
       return { error: error as Error };

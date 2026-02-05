@@ -8,8 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Search, UserCog, Shield, GraduationCap, User } from "lucide-react";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Search, UserCog, Shield, GraduationCap, User, Eye } from "lucide-react";
+import { UserDetailPanel } from "@/components/admin/UserDetailPanel";
 
 type AppRole = "admin" | "instructor" | "estudiante";
 
@@ -31,6 +31,8 @@ export default function UsersManagement() {
   const [search, setSearch] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [panelOpen, setPanelOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -132,6 +134,11 @@ export default function UsersManagement() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
+
+  const handleOpenUserDetail = (userId: string) => {
+    setSelectedUserId(userId);
+    setPanelOpen(true);
+  };
 
   const filteredUsers = users?.filter(user => {
     const matchesSearch = 
@@ -277,65 +284,14 @@ export default function UsersManagement() {
                         {new Date(user.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm">
-                              Editar
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Editar Usuario</DialogTitle>
-                              <DialogDescription>
-                                {user.first_name} {user.last_name}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 pt-4">
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Rol</label>
-                                <Select 
-                                  defaultValue={user.role}
-                                  onValueChange={(value) => updateRoleMutation.mutate({ 
-                                    userId: user.user_id, 
-                                    newRole: value as AppRole 
-                                  })}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="estudiante">Estudiante</SelectItem>
-                                    <SelectItem value="instructor">Instructor</SelectItem>
-                                    <SelectItem value="admin">Administrador</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Estado de Membresía</label>
-                                <Select 
-                                  defaultValue={user.membership_status || "pending"}
-                                  onValueChange={(value) => updateStatusMutation.mutate({ 
-                                    userId: user.user_id, 
-                                    status: value,
-                                    userName: `${user.first_name} ${user.last_name}`,
-                                    previousStatus: user.membership_status || "pending"
-                                  })}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="pending">Pendiente</SelectItem>
-                                    <SelectItem value="active">Activo</SelectItem>
-                                    <SelectItem value="suspended">Suspendido</SelectItem>
-                                    <SelectItem value="expired">Vencido</SelectItem>
-                                    <SelectItem value="cancelled">Cancelado</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </div>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => handleOpenUserDetail(user.user_id)}
+                        >
+                          <Eye className="h-4 w-4 mr-1" />
+                          Ver detalle
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -345,6 +301,13 @@ export default function UsersManagement() {
           )}
         </CardContent>
       </Card>
+
+      {/* User Detail Panel */}
+      <UserDetailPanel 
+        userId={selectedUserId}
+        open={panelOpen}
+        onOpenChange={setPanelOpen}
+      />
     </div>
   );
 }
