@@ -42,6 +42,7 @@ const adminMenu = [
   { title: "Cursos", url: "/dashboard/admin-courses", icon: BookOpen },
   { title: "Inscripciones", url: "/dashboard/admin-enrollments", icon: GraduationCap },
   { title: "Pagos", url: "/dashboard/admin-payments", icon: CreditCard },
+  { title: "Becas", url: "/dashboard/admin-scholarships", icon: GraduationCap },
   { title: "Exámenes", url: "/dashboard/admin-exams", icon: FileQuestion },
   { title: "Certificados", url: "/dashboard/admin-certificates", icon: Award },
   { title: "Insignias", url: "/dashboard/admin-badges", icon: Medal },

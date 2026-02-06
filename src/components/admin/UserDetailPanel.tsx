@@ -1,67 +1,103 @@
- import { useState } from "react";
- import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
- import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
- import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
- import { Button } from "@/components/ui/button";
- import { Input } from "@/components/ui/input";
- import { Label } from "@/components/ui/label";
- import { Badge } from "@/components/ui/badge";
- import { Progress } from "@/components/ui/progress";
- import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
- import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
- import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
- import { useAdminUsers, UserDetails } from "@/hooks/useAdminUsers";
- import { 
-   User, Clock, MapPin, BookOpen, Award, Trophy, 
-   Plus, X, Save, Loader2, GraduationCap, Shield
- } from "lucide-react";
- import { format } from "date-fns";
- import { es } from "date-fns/locale";
- 
- type AppRole = "admin" | "instructor" | "estudiante";
- 
- interface UserDetailPanelProps {
-   userId: string | null;
-   open: boolean;
-   onOpenChange: (open: boolean) => void;
- }
- 
- const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2500, 4000, 6000, 9000];
- const LEVEL_NAMES = [
-   "Novato", "Aprendiz", "Estudiante", "Practicante", "Intermedio",
-   "Avanzado", "Experto", "Maestro", "Gran Maestro", "Leyenda"
- ];
- 
- export function UserDetailPanel({ userId, open, onOpenChange }: UserDetailPanelProps) {
-   const {
-     useUserDetails,
-     useUserEnrollments,
-     useUserBadges,
-     useUserPoints,
-     useAvailableCourses,
-     useAvailableBadges,
-     updateProfile,
-     updateRole,
-     assignCourse,
-     removeCourse,
-     assignBadge,
-     removeBadge,
-     isUpdating
-   } = useAdminUsers();
- 
-   const { data: user, isLoading: loadingUser } = useUserDetails(userId);
-   const { data: enrollments, isLoading: loadingEnrollments } = useUserEnrollments(userId);
-   const { data: badges, isLoading: loadingBadges } = useUserBadges(userId);
-   const { data: points } = useUserPoints(userId);
-   const { data: availableCourses } = useAvailableCourses();
-   const { data: availableBadges } = useAvailableBadges();
- 
-   const [editForm, setEditForm] = useState<Partial<UserDetails>>({});
-   const [isEditing, setIsEditing] = useState(false);
-   const [assignCourseOpen, setAssignCourseOpen] = useState(false);
-   const [assignBadgeOpen, setAssignBadgeOpen] = useState(false);
-   const [selectedCourse, setSelectedCourse] = useState<string>("");
-   const [selectedBadge, setSelectedBadge] = useState<string>("");
+import { useState } from "react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAdminUsers, UserDetails } from "@/hooks/useAdminUsers";
+import { useUserScholarships, useRevokeScholarship, ScholarshipRecipient } from "@/hooks/useScholarships";
+import { AssignScholarshipDialog } from "./AssignScholarshipDialog";
+import { 
+  User, Clock, MapPin, BookOpen, Award, Trophy, 
+  Plus, X, Save, Loader2, GraduationCap, Shield,
+  Calendar, Percent, DollarSign, CheckCircle, XCircle
+} from "lucide-react";
+import { format, differenceInDays } from "date-fns";
+import { es } from "date-fns/locale";
+
+type AppRole = "admin" | "instructor" | "estudiante";
+
+interface UserDetailPanelProps {
+  userId: string | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+const LEVEL_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2500, 4000, 6000, 9000];
+const LEVEL_NAMES = [
+  "Novato", "Aprendiz", "Estudiante", "Practicante", "Intermedio",
+  "Avanzado", "Experto", "Maestro", "Gran Maestro", "Leyenda"
+];
+
+const getScholarshipTypeBadge = (scholarship: ScholarshipRecipient["scholarship"]) => {
+  if (!scholarship) return null;
+  switch (scholarship.type) {
+    case "full":
+      return <Badge className="bg-accent/20 text-accent"><Percent className="w-3 h-3 mr-1" />100%</Badge>;
+    case "partial":
+      return <Badge className="bg-primary/20 text-primary"><Percent className="w-3 h-3 mr-1" />{scholarship.discount_percent}%</Badge>;
+    case "fixed":
+      return <Badge className="bg-secondary/50 text-secondary-foreground"><DollarSign className="w-3 h-3 mr-1" />${scholarship.discount_amount}</Badge>;
+    default:
+      return null;
+  }
+};
+
+const getScholarshipStatusBadge = (status: string) => {
+  switch (status) {
+    case "active":
+      return <Badge className="bg-accent/20 text-accent"><CheckCircle className="w-3 h-3 mr-1" />Activa</Badge>;
+    case "expired":
+      return <Badge variant="outline"><Clock className="w-3 h-3 mr-1" />Vencida</Badge>;
+    case "revoked":
+      return <Badge variant="destructive"><XCircle className="w-3 h-3 mr-1" />Revocada</Badge>;
+    default:
+      return <Badge variant="outline">{status}</Badge>;
+  }
+};
+
+export function UserDetailPanel({ userId, open, onOpenChange }: UserDetailPanelProps) {
+  const {
+    useUserDetails,
+    useUserEnrollments,
+    useUserBadges,
+    useUserPoints,
+    useAvailableCourses,
+    useAvailableBadges,
+    updateProfile,
+    updateRole,
+    assignCourse,
+    removeCourse,
+    assignBadge,
+    removeBadge,
+    isUpdating
+  } = useAdminUsers();
+
+  const { data: user, isLoading: loadingUser } = useUserDetails(userId);
+  const { data: enrollments, isLoading: loadingEnrollments } = useUserEnrollments(userId);
+  const { data: badges, isLoading: loadingBadges } = useUserBadges(userId);
+  const { data: points } = useUserPoints(userId);
+  const { data: availableCourses } = useAvailableCourses();
+  const { data: availableBadges } = useAvailableBadges();
+  const { data: userScholarships, isLoading: loadingScholarships } = useUserScholarships(userId || "");
+  const revokeScholarship = useRevokeScholarship();
+
+  const [editForm, setEditForm] = useState<Partial<UserDetails>>({});
+  const [isEditing, setIsEditing] = useState(false);
+  const [assignCourseOpen, setAssignCourseOpen] = useState(false);
+  const [assignBadgeOpen, setAssignBadgeOpen] = useState(false);
+  const [assignScholarshipOpen, setAssignScholarshipOpen] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<string>("");
+  const [selectedBadge, setSelectedBadge] = useState<string>("");
+  const [revokeRecipient, setRevokeRecipient] = useState<ScholarshipRecipient | null>(null);
+  const [revokeReason, setRevokeReason] = useState("");
  
    const handleEditStart = () => {
      if (user) {
@@ -175,13 +211,14 @@
                </div>
              </div>
  
-             <Tabs defaultValue="info" className="space-y-4">
-               <TabsList className="grid w-full grid-cols-4">
-                 <TabsTrigger value="info" className="text-xs sm:text-sm">Info</TabsTrigger>
-                 <TabsTrigger value="activity" className="text-xs sm:text-sm">Actividad</TabsTrigger>
-                 <TabsTrigger value="courses" className="text-xs sm:text-sm">Cursos</TabsTrigger>
-                 <TabsTrigger value="gamification" className="text-xs sm:text-sm">Logros</TabsTrigger>
-               </TabsList>
+              <Tabs defaultValue="info" className="space-y-4">
+                <TabsList className="grid w-full grid-cols-5">
+                  <TabsTrigger value="info" className="text-xs">Info</TabsTrigger>
+                  <TabsTrigger value="activity" className="text-xs">Actividad</TabsTrigger>
+                  <TabsTrigger value="courses" className="text-xs">Cursos</TabsTrigger>
+                  <TabsTrigger value="scholarships" className="text-xs">Becas</TabsTrigger>
+                  <TabsTrigger value="gamification" className="text-xs">Logros</TabsTrigger>
+                </TabsList>
  
                {/* Info Tab */}
                <TabsContent value="info" className="space-y-4">
@@ -433,7 +470,94 @@
                      )}
                    </CardContent>
                  </Card>
-               </TabsContent>
+                </TabsContent>
+
+                {/* Scholarships Tab */}
+                <TabsContent value="scholarships" className="space-y-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between py-3">
+                      <CardTitle className="text-base flex items-center gap-2">
+                        <GraduationCap className="h-4 w-4" />
+                        Historial de Becas ({userScholarships?.length || 0})
+                      </CardTitle>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        onClick={() => setAssignScholarshipOpen(true)}
+                      >
+                        <Plus className="h-4 w-4 mr-1" />
+                        Asignar
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      {loadingScholarships ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="h-6 w-6 animate-spin" />
+                        </div>
+                      ) : userScholarships?.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          No tiene becas asignadas
+                        </p>
+                      ) : (
+                        <div className="space-y-3">
+                          {userScholarships?.map(recipient => {
+                            const daysRemaining = recipient.status === "active" 
+                              ? differenceInDays(new Date(recipient.expires_at), new Date())
+                              : 0;
+                            
+                            return (
+                              <div key={recipient.id} className="p-3 rounded-lg border space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <p className="font-medium text-sm">{recipient.scholarship?.name}</p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      {getScholarshipTypeBadge(recipient.scholarship)}
+                                      {getScholarshipStatusBadge(recipient.status)}
+                                    </div>
+                                  </div>
+                                  {recipient.status === "active" && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm"
+                                      className="text-destructive hover:text-destructive"
+                                      onClick={() => setRevokeRecipient(recipient)}
+                                    >
+                                      <XCircle className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                                
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    {format(new Date(recipient.starts_at), "d MMM yy", { locale: es })} - {format(new Date(recipient.expires_at), "d MMM yy", { locale: es })}
+                                  </div>
+                                  {recipient.status === "active" && daysRemaining > 0 && (
+                                    <span className="text-accent font-medium">
+                                      {daysRemaining} días restantes
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {recipient.notes && (
+                                  <p className="text-xs text-muted-foreground italic">
+                                    "{recipient.notes}"
+                                  </p>
+                                )}
+                                
+                                {recipient.status === "revoked" && recipient.revoked_reason && (
+                                  <p className="text-xs text-destructive">
+                                    Motivo: {recipient.revoked_reason}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
  
                {/* Gamification Tab */}
                <TabsContent value="gamification" className="space-y-4">
@@ -555,9 +679,55 @@
                  </Card>
                </TabsContent>
              </Tabs>
-           </>
-         )}
-       </SheetContent>
-     </Sheet>
-   );
- }
+            </>
+          )}
+
+          {/* Assign Scholarship Dialog */}
+          {userId && user && (
+            <AssignScholarshipDialog
+              open={assignScholarshipOpen}
+              onOpenChange={setAssignScholarshipOpen}
+              userId={userId}
+              userName={`${user.first_name} ${user.last_name}`}
+            />
+          )}
+
+          {/* Revoke Scholarship Dialog */}
+          <AlertDialog open={!!revokeRecipient} onOpenChange={() => setRevokeRecipient(null)}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>¿Revocar beca?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  El estudiante perderá los beneficios de esta beca. Por favor ingresa el motivo:
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <Input
+                placeholder="Motivo de la revocación..."
+                value={revokeReason}
+                onChange={(e) => setRevokeReason(e.target.value)}
+              />
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setRevokeReason("")}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={async () => {
+                    if (revokeRecipient && revokeReason) {
+                      await revokeScholarship.mutateAsync({
+                        recipientId: revokeRecipient.id,
+                        reason: revokeReason,
+                      });
+                      setRevokeRecipient(null);
+                      setRevokeReason("");
+                    }
+                  }}
+                  disabled={!revokeReason.trim()}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Revocar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </SheetContent>
+      </Sheet>
+    );
+  }
