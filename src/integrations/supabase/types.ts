@@ -850,6 +850,110 @@ export type Database = {
           },
         ]
       }
+      scholarship_recipients: {
+        Row: {
+          created_at: string
+          expires_at: string
+          granted_at: string
+          granted_by: string | null
+          id: string
+          notes: string | null
+          revoked_at: string | null
+          revoked_reason: string | null
+          scholarship_id: string
+          starts_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          scholarship_id: string
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          granted_at?: string
+          granted_by?: string | null
+          id?: string
+          notes?: string | null
+          revoked_at?: string | null
+          revoked_reason?: string | null
+          scholarship_id?: string
+          starts_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scholarship_recipients_scholarship_id_fkey"
+            columns: ["scholarship_id"]
+            isOneToOne: false
+            referencedRelation: "scholarships"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scholarships: {
+        Row: {
+          created_at: string
+          current_recipients: number
+          description: string | null
+          discount_amount: number | null
+          discount_percent: number | null
+          duration_months: number
+          id: string
+          is_active: boolean
+          max_recipients: number | null
+          name: string
+          requirements: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_recipients?: number
+          description?: string | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          duration_months?: number
+          id?: string
+          is_active?: boolean
+          max_recipients?: number | null
+          name: string
+          requirements?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_recipients?: number
+          description?: string | null
+          discount_amount?: number | null
+          discount_percent?: number | null
+          duration_months?: number
+          id?: string
+          is_active?: boolean
+          max_recipients?: number | null
+          name?: string
+          requirements?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           auto_renew: boolean | null

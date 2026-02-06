@@ -23,6 +23,7 @@ import BadgesManagement from "./admin/BadgesManagement";
 import EnrollmentsManagement from "./admin/EnrollmentsManagement";
 import NotificationsManagement from "./admin/NotificationsManagement";
 import PaymentsManagement from "./admin/PaymentsManagement";
+import ScholarshipsManagement from "./admin/ScholarshipsManagement";
 import InstructorDashboard from "./instructor/InstructorDashboard";
 import InstructorCourses from "./instructor/InstructorCourses";
 import InstructorStudents from "./instructor/InstructorStudents";
@@ -163,6 +164,11 @@ export default function Dashboard() {
               <Route path="admin-payments" element={
                 <RoleRoute allowedRoles={["admin"]}>
                   <PaymentsManagement />
+                </RoleRoute>
+              } />
+              <Route path="admin-scholarships" element={
+                <RoleRoute allowedRoles={["admin"]}>
+                  <ScholarshipsManagement />
                 </RoleRoute>
               } />
               
