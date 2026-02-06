@@ -1,216 +1,218 @@
 
 
-## Plan: Panel Detallado de Usuario para Administrador
+## Plan: Sistema de Becas para la Plataforma EDAN
 
 ### Objetivo
-Crear un panel detallado al seleccionar un usuario en la gestión de administración que muestre toda su información y permita editar datos y asignar cursos/insignias manualmente.
+Implementar un sistema completo de becas que permita a los administradores crear, gestionar y asignar becas a estudiantes, otorgándoles acceso parcial o total a la plataforma sin costo o con descuento.
 
-### Cambios en Base de Datos
+---
 
-#### 1. Agregar campos a la tabla `profiles`
+### Modelo de Datos
+
+#### Nueva Tabla: `scholarships` (Tipos de Becas)
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | uuid | Identificador único |
+| name | text | Nombre de la beca (ej: "Beca Excelencia", "Beca Socioeconómica") |
+| description | text | Descripción detallada |
+| type | text | Tipo: full (100%), partial (porcentaje), fixed (monto fijo) |
+| discount_percent | integer | Porcentaje de descuento (para tipo partial) |
+| discount_amount | numeric | Monto de descuento fijo (para tipo fixed) |
+| duration_months | integer | Duración de la beca en meses |
+| max_recipients | integer | Número máximo de beneficiarios (null = sin límite) |
+| current_recipients | integer | Contador de beneficiarios actuales |
+| requirements | text | Requisitos para aplicar |
+| is_active | boolean | Si está disponible para asignar |
+| created_at | timestamp | Fecha de creación |
+| updated_at | timestamp | Última actualización |
+
+#### Nueva Tabla: `scholarship_recipients` (Becarios)
+
+| Campo | Tipo | Descripción |
+|-------|------|-------------|
+| id | uuid | Identificador único |
+| scholarship_id | uuid | FK a scholarships |
+| user_id | uuid | FK a auth.users |
+| granted_by | uuid | Admin que otorgó la beca |
+| granted_at | timestamp | Fecha de asignación |
+| starts_at | timestamp | Fecha de inicio |
+| expires_at | timestamp | Fecha de expiración |
+| status | text | active, expired, revoked, pending |
+| notes | text | Notas del admin |
+| revoked_at | timestamp | Fecha de revocación (si aplica) |
+| revoked_reason | text | Razón de revocación |
+
+---
+
+### Políticas RLS
 
 ```sql
-ALTER TABLE profiles
-ADD COLUMN last_login TIMESTAMP WITH TIME ZONE,
-ADD COLUMN last_ip_address TEXT;
+-- scholarships: Admins pueden gestionar, todos pueden ver las activas
+CREATE POLICY "Admins can manage scholarships" ON scholarships FOR ALL 
+  USING (has_role(auth.uid(), 'admin'));
+  
+CREATE POLICY "Anyone can view active scholarships" ON scholarships FOR SELECT 
+  USING (is_active = true);
+
+-- scholarship_recipients: Admins gestionan todo, usuarios ven las suyas
+CREATE POLICY "Admins can manage recipients" ON scholarship_recipients FOR ALL 
+  USING (has_role(auth.uid(), 'admin'));
+  
+CREATE POLICY "Users can view their scholarships" ON scholarship_recipients FOR SELECT 
+  USING (auth.uid() = user_id);
 ```
 
-Estos campos almacenarán la fecha de última conexión y la dirección IP del usuario.
+---
 
-#### 2. Actualizar RLS policies para enrollments
+### Archivos a Crear
 
-Agregar política que permita a admins insertar y actualizar enrollments:
+| Archivo | Descripción |
+|---------|-------------|
+| `src/pages/admin/ScholarshipsManagement.tsx` | Página de gestión de becas |
+| `src/hooks/useScholarships.tsx` | Hook con queries y mutations para becas |
+| `src/components/admin/ScholarshipForm.tsx` | Formulario crear/editar beca |
+| `src/components/admin/AssignScholarshipDialog.tsx` | Modal para asignar beca a usuario |
+| `supabase/functions/send-scholarship-email/index.ts` | Edge function para notificación |
+| Migración SQL | Crear tablas y políticas |
 
-```sql
--- Admins can manage all enrollments
-CREATE POLICY "Admins can manage all enrollments"
-  ON enrollments FOR ALL
-  USING (has_role(auth.uid(), 'admin'::app_role))
-  WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
-```
+---
 
-#### 3. Actualizar RLS policies para user_badges
+### Archivos a Modificar
 
-Agregar política que permita a admins insertar insignias manualmente:
+| Archivo | Cambios |
+|---------|---------|
+| `src/pages/Dashboard.tsx` | Agregar ruta `/dashboard/admin-scholarships` |
+| `src/components/dashboard/AppSidebar.tsx` | Agregar enlace "Becas" en menú admin |
+| `src/components/admin/UserDetailPanel.tsx` | Mostrar becas del usuario y permitir asignar |
+| `src/hooks/useAdminUsers.tsx` | Agregar query para becas del usuario |
+| `src/pages/dashboard/Profile.tsx` | Mostrar estado de beca activa del estudiante |
+| `src/hooks/useStudentPayments.tsx` | Verificar si usuario tiene beca activa |
+| `src/pages/dashboard/RenewMembership.tsx` | Aplicar descuento de beca automáticamente |
+| `src/hooks/useEmailSettings.tsx` | Agregar tipo de email "scholarship_granted" |
 
-```sql
--- Admins can manage all badges
-CREATE POLICY "Admins can manage all user badges"
-  ON user_badges FOR ALL
-  USING (has_role(auth.uid(), 'admin'::app_role))
-  WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
-```
+---
 
-### Archivos a Crear/Modificar
-
-| Archivo | Accion | Descripcion |
-|---------|--------|-------------|
-| Migracion SQL | Crear | Agregar campos last_login, last_ip_address y politicas RLS |
-| `src/hooks/useAuth.tsx` | Modificar | Trackear login con IP y fecha |
-| `src/components/admin/UserDetailPanel.tsx` | Crear | Panel lateral/modal con toda la informacion del usuario |
-| `src/pages/admin/UsersManagement.tsx` | Modificar | Integrar panel de detalle y nuevas funcionalidades |
-| `src/hooks/useAdminUsers.tsx` | Crear | Hook con funciones para gestionar usuarios, asignar cursos e insignias |
-
-### Estructura del Panel de Usuario
-
-```
-+-----------------------------------------------+
-|  [<] Usuario Detallado                        |
-+-----------------------------------------------+
-| [Avatar] Juan Perez                           |
-| Estado: Activo    Rol: Estudiante             |
-+-----------------------------------------------+
-| INFORMACION PERSONAL                          |
-| ----------------------------------------      |
-| Nombre: Juan Perez              [Editar]      |
-| Pais: Colombia                                |
-| Profesion: Ingeniero                          |
-| Telefono: +57 300 123 4567                    |
-+-----------------------------------------------+
-| ACTIVIDAD                                     |
-| ----------------------------------------      |
-| Ultima conexion: 5 Feb 2026, 14:30            |
-| Direccion IP: 192.168.1.100                   |
-| Registrado: 15 Ene 2026                       |
-+-----------------------------------------------+
-| CURSOS INSCRITOS                    [+ Nuevo] |
-| ----------------------------------------      |
-| - Operaciones EDAN (Operaciones)  0%  [X]     |
-| - Tecnologias EDAN (Tecnologias)  25% [X]     |
-+-----------------------------------------------+
-| INSIGNIAS OBTENIDAS                 [+ Nueva] |
-| ----------------------------------------      |
-| - Primer Paso (10 pts) - 29 Dic 2025          |
-| - Explorador (25 pts) - 15 Ene 2026           |
-+-----------------------------------------------+
-| PUNTOS Y NIVEL                                |
-| ----------------------------------------      |
-| Nivel: 3 - Estudiante                         |
-| Puntos: 450 / 600                             |
-| [==========>----------] 75%                   |
-+-----------------------------------------------+
-|          [Guardar Cambios]                    |
-+-----------------------------------------------+
-```
-
-### Funcionalidades del Panel
-
-#### Tab 1: Informacion General
-- Nombre completo (editable)
-- Pais, profesion, telefono (editables)
-- Estado de membresia (editable)
-- Rol del usuario (editable)
-
-#### Tab 2: Actividad
-- Fecha de ultima conexion
-- Direccion IP de ultima conexion
-- Fecha de registro
-- Historial de eventos recientes (de user_analytics)
-
-#### Tab 3: Cursos
-- Lista de cursos inscritos con:
-  - Titulo del curso
-  - Nivel del curso
-  - Porcentaje de progreso
-  - Fecha de inscripcion
-  - Boton para eliminar inscripcion
-- Boton para asignar nuevo curso (dropdown con cursos disponibles)
-
-#### Tab 4: Gamificacion
-- Nivel actual y puntos
-- Barra de progreso hacia siguiente nivel
-- Lista de insignias obtenidas
-- Boton para asignar insignia manualmente
-
-### Flujo de Tracking de Conexion
-
-```
-Usuario inicia sesion
-        |
-        v
-Hook useAuth detecta login exitoso
-        |
-        v
-Obtiene IP del cliente (via API o header)
-        |
-        v
-Actualiza profiles con last_login y last_ip_address
-        |
-        v
-Datos disponibles para el admin
-```
-
-### Diagrama de Componentes
+### Diseño de UI - Gestión de Becas
 
 ```text
-UsersManagement.tsx
-    |
-    +-- UserDetailPanel.tsx (Sheet lateral)
-    |       |
-    |       +-- Tabs
-    |       |     +-- Tab: Informacion (formulario editable)
-    |       |     +-- Tab: Actividad (solo lectura)
-    |       |     +-- Tab: Cursos (lista + asignar)
-    |       |     +-- Tab: Gamificacion (nivel + insignias)
-    |       |
-    |       +-- AssignCourseDialog.tsx
-    |       +-- AssignBadgeDialog.tsx
-    |
-    +-- useAdminUsers.tsx (hook)
-            +-- getUserDetails()
-            +-- updateUserProfile()
-            +-- assignCourse()
-            +-- removeCourse()
-            +-- assignBadge()
-            +-- removeBadge()
+┌─────────────────────────────────────────────────────────────────┐
+│  🎓 Gestión de Becas                           [+ Nueva Beca]   │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │ Total Becas  │  │ Becarios     │  │ Becas        │          │
+│  │     8        │  │ Activos: 24  │  │ Disponibles  │          │
+│  │ 5 activas    │  │              │  │     3        │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│                                                                 │
+│  [Tipos de Becas] [Becarios]                                   │
+│                                                                 │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │ Tipos de Becas                                           │   │
+│  ├──────┬──────────┬────────┬─────────┬──────────┬────────┤   │
+│  │Nombre│   Tipo   │Descuento│Duración │Becarios  │ Estado │   │
+│  ├──────┼──────────┼────────┼─────────┼──────────┼────────┤   │
+│  │Excel │  100%    │ Total  │12 meses │  8/10    │ Activa │   │
+│  │Socio │  50%     │  50%   │ 6 meses │  12/∞    │ Activa │   │
+│  │Mérito│  $50     │ Fijo   │ 3 meses │  4/20    │ Activa │   │
+│  └──────┴──────────┴────────┴─────────┴──────────┴────────┘   │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Detalles Tecnicos
+---
 
-#### Tracking de IP
-Para obtener la IP del usuario, se usara una API externa gratuita como `api.ipify.org` al momento del login, ya que desde el frontend no se puede obtener la IP real del cliente directamente.
+### Flujo de Asignación de Beca
 
-```typescript
-// En useAuth.tsx al detectar login
-const response = await fetch('https://api.ipify.org?format=json');
-const { ip } = await response.json();
-await supabase.from('profiles').update({
-  last_login: new Date().toISOString(),
-  last_ip_address: ip
-}).eq('user_id', user.id);
+```text
+Admin abre panel de usuario
+        ↓
+Tab "Becas" muestra historial
+        ↓
+Clic en "Asignar Beca"
+        ↓
+Selecciona tipo de beca disponible
+        ↓
+Define fechas y agrega notas
+        ↓
+Confirma asignación
+        ↓
+Sistema:
+  - Crea registro en scholarship_recipients
+  - Actualiza membership_status a "active"
+  - Crea/extiende suscripción
+  - Envía email de notificación
+  - Registra en historial
 ```
 
-#### Asignacion de Cursos
-```typescript
-// Insertar enrollment como admin
-await supabase.from('enrollments').insert({
-  user_id: selectedUser.user_id,
-  course_id: selectedCourse,
-  progress_percent: 0
-});
+---
+
+### Integración con Pagos
+
+Cuando un usuario con beca activa intenta renovar:
+
+1. El sistema detecta la beca activa
+2. Aplica el descuento automáticamente al precio
+3. Si es beca 100%, muestra que tiene acceso gratuito
+4. Si es beca parcial, muestra precio original vs. precio con beca
+
+---
+
+### Email de Notificación
+
+Nueva Edge Function `send-scholarship-email`:
+- Notifica al estudiante cuando recibe una beca
+- Incluye: nombre de la beca, duración, fecha de inicio/fin
+- Se registra en email_logs
+
+Agregar configuración en `email_settings`:
+```sql
+INSERT INTO email_settings (email_type, subject, description)
+VALUES ('scholarship_granted', '¡Felicitaciones! Has recibido una beca EDAN', 
+        'Email enviado cuando se asigna una beca a un estudiante');
 ```
 
-#### Asignacion de Insignias
-```typescript
-// Insertar insignia manualmente
-await supabase.from('user_badges').insert({
-  user_id: selectedUser.user_id,
-  badge_id: selectedBadge
-});
+---
 
-// Agregar puntos correspondientes
-await supabase.rpc('add_user_points', {
-  _user_id: selectedUser.user_id,
-  _points: badge.points_value,
-  _reason: 'Insignia asignada manualmente: ' + badge.name,
-  _reference_type: 'badge',
-  _reference_id: badge.id
-});
-```
+### Panel de Usuario (Estudiante)
 
-### Beneficios
-- Vision completa del usuario en un solo lugar
-- Control total sobre inscripciones y gamificacion
-- Tracking de actividad para monitoreo
-- Capacidad de asignar recursos manualmente (util para promociones, casos especiales)
+En el perfil del estudiante se mostrará:
+- Badge "Becario" si tiene beca activa
+- Nombre de la beca y porcentaje de cobertura
+- Fecha de inicio y expiración
+- Días restantes con barra de progreso
+
+---
+
+### Panel de Usuario (Admin - UserDetailPanel)
+
+Nueva pestaña "Becas" que muestra:
+- Historial de becas del usuario
+- Beca activa actual (si existe)
+- Botón "Asignar Beca" 
+- Opción de revocar beca activa
+
+---
+
+### Secuencia de Implementación
+
+1. **Migración SQL**: Crear tablas `scholarships` y `scholarship_recipients` con RLS
+2. **Hook useScholarships**: Queries y mutations para gestionar becas
+3. **ScholarshipsManagement.tsx**: Página completa de administración
+4. **AssignScholarshipDialog**: Modal para asignar beca desde gestión de usuarios
+5. **Integrar en UserDetailPanel**: Nueva tab de becas
+6. **Edge Function email**: Notificación de beca asignada
+7. **Integrar en RenewMembership**: Aplicar descuento de beca
+8. **Actualizar sidebar y rutas**: Agregar acceso al menú admin
+
+---
+
+### Consideraciones Técnicas
+
+- Las becas no crean pagos, pero sí crean/extienden suscripciones
+- El campo `payment_method` en payments puede ser "scholarship" para registros de beca
+- Las becas tienen prioridad sobre códigos promocionales
+- Un usuario solo puede tener una beca activa a la vez
+- Al revocar una beca, se puede optar por suspender o mantener el acceso restante
 
