@@ -12,6 +12,7 @@ export function Header() {
     { label: "Programa", href: "#about" },
     { label: "Niveles", href: "#levels" },
     { label: "Beneficios", href: "#benefits" },
+    { label: "Nosotros", href: "#team" },
     { label: "Testimonios", href: "#testimonials" },
   ];
 
