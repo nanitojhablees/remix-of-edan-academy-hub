@@ -12,6 +12,8 @@ export interface Exam {
   passing_score: number;
   max_attempts: number;
   is_published: boolean;
+  shuffle_questions: boolean;
+  show_correct_answers: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +25,7 @@ export interface Question {
   question_type: string;
   points: number;
   order_index: number;
+  image_url: string | null;
   created_at: string;
 }
 
@@ -351,7 +354,7 @@ export const useCreateQuestion = () => {
       question, 
       options 
     }: { 
-      question: { exam_id: string; question_text: string; question_type?: string; points?: number; order_index?: number }; 
+      question: { exam_id: string; question_text: string; question_type?: string; points?: number; order_index?: number; image_url?: string }; 
       options: Array<{ option_text: string; is_correct: boolean }> 
     }) => {
       // Create question
@@ -396,7 +399,7 @@ export const useUpdateQuestion = () => {
       options 
     }: { 
       questionId: string;
-      question: Partial<Question>; 
+      question: Partial<Question> & { image_url?: string | null }; 
       options: Array<{ id?: string; option_text: string; is_correct: boolean }> 
     }) => {
       // Update question

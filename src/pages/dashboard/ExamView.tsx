@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useExam, useExamQuestions, useExamAttempts, useStartExamAttempt, useSubmitExam } from "@/hooks/useExams";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ArrowLeft, Clock, FileQuestion, CheckCircle, XCircle, AlertTriangle, Trophy } from "lucide-react";
+import { ArrowLeft, Clock, FileQuestion, CheckCircle, XCircle, AlertTriangle, Trophy, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -72,6 +72,19 @@ export default function ExamView() {
       });
     }
   };
+
+  // Shuffle questions if exam has shuffle enabled
+  const shuffledQuestions = useMemo(() => {
+    if (!questions || questions.length === 0) return [];
+    if (!exam?.shuffle_questions) return questions;
+    // Fisher-Yates shuffle with stable seed per attempt
+    const arr = [...questions];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }, [questions, exam?.shuffle_questions, examStarted]);
   
   const handleAnswerSelect = (questionId: string, optionId: string) => {
     setAnswers(prev => ({
@@ -201,9 +214,9 @@ export default function ExamView() {
   }
   
   // Show exam in progress
-  if (examStarted && questions && questions.length > 0) {
-    const question = questions[currentQuestion];
-    const progress = ((currentQuestion + 1) / questions.length) * 100;
+  if (examStarted && shuffledQuestions && shuffledQuestions.length > 0) {
+    const question = shuffledQuestions[currentQuestion];
+    const progress = ((currentQuestion + 1) / shuffledQuestions.length) * 100;
     const answeredCount = Object.keys(answers).length;
     
     return (
@@ -213,7 +226,7 @@ export default function ExamView() {
           <div>
             <h1 className="text-xl font-bold">{exam.title}</h1>
             <p className="text-sm text-muted-foreground">
-              Pregunta {currentQuestion + 1} de {questions.length}
+              Pregunta {currentQuestion + 1} de {shuffledQuestions.length}
             </p>
           </div>
           <div className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
@@ -235,6 +248,15 @@ export default function ExamView() {
               </Badge>
             </div>
             <CardTitle className="text-lg mt-4">{question.question_text}</CardTitle>
+            {question.image_url && (
+              <div className="mt-4">
+                <img 
+                  src={question.image_url} 
+                  alt="Imagen de la pregunta" 
+                  className="max-w-full max-h-64 rounded-lg border object-contain mx-auto"
+                />
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <RadioGroup
@@ -271,16 +293,16 @@ export default function ExamView() {
             </Button>
             
             <div className="flex gap-2">
-              {currentQuestion === questions.length - 1 ? (
+              {currentQuestion === shuffledQuestions.length - 1 ? (
                 <Button
                   onClick={handleSubmit}
                   disabled={submitExam.isPending}
                 >
-                  {submitExam.isPending ? 'Enviando...' : `Enviar examen (${answeredCount}/${questions.length})`}
+                  {submitExam.isPending ? 'Enviando...' : `Enviar examen (${answeredCount}/${shuffledQuestions.length})`}
                 </Button>
               ) : (
                 <Button
-                  onClick={() => setCurrentQuestion(prev => Math.min(questions.length - 1, prev + 1))}
+                  onClick={() => setCurrentQuestion(prev => Math.min(shuffledQuestions.length - 1, prev + 1))}
                 >
                   Siguiente
                 </Button>
@@ -296,7 +318,7 @@ export default function ExamView() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {questions.map((q, i) => (
+              {shuffledQuestions.map((q, i) => (
                 <Button
                   key={q.id}
                   variant={currentQuestion === i ? 'default' : answers[q.id] ? 'secondary' : 'outline'}

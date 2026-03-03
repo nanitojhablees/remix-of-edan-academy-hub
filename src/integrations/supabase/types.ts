@@ -342,6 +342,8 @@ export type Database = {
           max_attempts: number | null
           module_id: string | null
           passing_score: number | null
+          show_correct_answers: boolean
+          shuffle_questions: boolean
           title: string
           updated_at: string
         }
@@ -355,6 +357,8 @@ export type Database = {
           max_attempts?: number | null
           module_id?: string | null
           passing_score?: number | null
+          show_correct_answers?: boolean
+          shuffle_questions?: boolean
           title: string
           updated_at?: string
         }
@@ -368,6 +372,8 @@ export type Database = {
           max_attempts?: number | null
           module_id?: string | null
           passing_score?: number | null
+          show_correct_answers?: boolean
+          shuffle_questions?: boolean
           title?: string
           updated_at?: string
         }
@@ -817,6 +823,7 @@ export type Database = {
           created_at: string
           exam_id: string
           id: string
+          image_url: string | null
           order_index: number
           points: number
           question_text: string
@@ -826,6 +833,7 @@ export type Database = {
           created_at?: string
           exam_id: string
           id?: string
+          image_url?: string | null
           order_index?: number
           points?: number
           question_text: string
@@ -835,6 +843,7 @@ export type Database = {
           created_at?: string
           exam_id?: string
           id?: string
+          image_url?: string | null
           order_index?: number
           points?: number
           question_text?: string
