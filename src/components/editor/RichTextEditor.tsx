@@ -154,10 +154,39 @@ export function RichTextEditor({
     
     if (file.type.startsWith('image/')) {
       addImage(file.url);
-    } else {
-      // Insert as a styled link for documents
+    } else if (file.type === 'application/pdf') {
+      // Embed PDF inline with viewer
       editor.chain().focus().insertContent(
-        `<p><a href="${file.url}" target="_blank" rel="noopener noreferrer">📎 ${file.name}</a></p>`
+        `<div class="embedded-file embedded-pdf" data-file-type="pdf" data-file-name="${file.name}">
+          <div class="embedded-file-header">
+            <span>📄 ${file.name}</span>
+            <a href="${file.url}" target="_blank" rel="noopener noreferrer">Abrir en nueva pestaña ↗</a>
+          </div>
+          <iframe src="${file.url}" class="embedded-pdf-viewer" title="${file.name}"></iframe>
+        </div>`
+      ).run();
+    } else if (file.type.includes('presentation') || file.type.includes('powerpoint') || file.name.endsWith('.ppt') || file.name.endsWith('.pptx')) {
+      // Insert presentation as a styled card with download link
+      const viewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(file.url)}`;
+      editor.chain().focus().insertContent(
+        `<div class="embedded-file embedded-presentation" data-file-type="presentation" data-file-name="${file.name}">
+          <div class="embedded-file-header">
+            <span>📊 ${file.name}</span>
+            <a href="${file.url}" target="_blank" rel="noopener noreferrer">Descargar ↗</a>
+          </div>
+          <iframe src="${viewerUrl}" class="embedded-presentation-viewer" title="${file.name}"></iframe>
+        </div>`
+      ).run();
+    } else {
+      // Insert as a styled download card for other documents
+      editor.chain().focus().insertContent(
+        `<div class="embedded-file embedded-document" data-file-type="document" data-file-name="${file.name}">
+          <a href="${file.url}" target="_blank" rel="noopener noreferrer" class="embedded-document-link">
+            <span class="embedded-document-icon">📎</span>
+            <span class="embedded-document-name">${file.name}</span>
+            <span class="embedded-document-action">Descargar ↗</span>
+          </a>
+        </div>`
       ).run();
     }
   }, [editor, addImage]);
@@ -405,9 +434,9 @@ export function RichTextEditor({
             </PopoverTrigger>
             <PopoverContent className="w-80">
               <div className="space-y-4">
-                <Label>Subir archivo (PDF, DOC, Video, Audio)</Label>
+                <Label>Subir archivo (PDF, PPT, DOC, Video, Audio)</Label>
                 <FileUploader
-                  accept="application/pdf,.doc,.docx,video/mp4,video/webm,audio/mpeg,audio/wav"
+                  accept="application/pdf,.doc,.docx,.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,video/mp4,video/webm,audio/mpeg,audio/wav"
                   maxSize={50}
                   onFileUploaded={insertFileLink}
                 />
