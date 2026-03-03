@@ -1,218 +1,153 @@
 
+## Plan: Implementar Sistema de 4 Niveles de Acceso + Membresia Anual
 
-## Plan: Sistema de Becas para la Plataforma EDAN
+### Resumen
 
-### Objetivo
-Implementar un sistema completo de becas que permita a los administradores crear, gestionar y asignar becas a estudiantes, otorgándoles acceso parcial o total a la plataforma sin costo o con descuento.
-
----
-
-### Modelo de Datos
-
-#### Nueva Tabla: `scholarships` (Tipos de Becas)
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | uuid | Identificador único |
-| name | text | Nombre de la beca (ej: "Beca Excelencia", "Beca Socioeconómica") |
-| description | text | Descripción detallada |
-| type | text | Tipo: full (100%), partial (porcentaje), fixed (monto fijo) |
-| discount_percent | integer | Porcentaje de descuento (para tipo partial) |
-| discount_amount | numeric | Monto de descuento fijo (para tipo fixed) |
-| duration_months | integer | Duración de la beca en meses |
-| max_recipients | integer | Número máximo de beneficiarios (null = sin límite) |
-| current_recipients | integer | Contador de beneficiarios actuales |
-| requirements | text | Requisitos para aplicar |
-| is_active | boolean | Si está disponible para asignar |
-| created_at | timestamp | Fecha de creación |
-| updated_at | timestamp | Última actualización |
-
-#### Nueva Tabla: `scholarship_recipients` (Becarios)
-
-| Campo | Tipo | Descripción |
-|-------|------|-------------|
-| id | uuid | Identificador único |
-| scholarship_id | uuid | FK a scholarships |
-| user_id | uuid | FK a auth.users |
-| granted_by | uuid | Admin que otorgó la beca |
-| granted_at | timestamp | Fecha de asignación |
-| starts_at | timestamp | Fecha de inicio |
-| expires_at | timestamp | Fecha de expiración |
-| status | text | active, expired, revoked, pending |
-| notes | text | Notas del admin |
-| revoked_at | timestamp | Fecha de revocación (si aplica) |
-| revoked_reason | text | Razón de revocación |
+Transformar el sistema actual (que requiere membresia para todo) en un sistema con 4 niveles de acceso diferenciados, mas la membresia anual como opcion principal para acceso completo.
 
 ---
 
-### Políticas RLS
+### Estado Actual
+
+- La tabla `courses` tiene un campo `level` (operaciones, tecnologias, decisiones, analisis) que es tematico, no de acceso
+- `ProtectedRoute` con `requireActiveMembership` bloquea todo el dashboard si no hay membresia activa
+- Ya existen planes de pago en la BD: Mensual $12, Por Nivel $29, Anual $99
+- No existe concepto de cursos gratuitos ni acceso sin membresia
+
+### Lo que se implementara
+
+| Nivel | Descripcion | Requiere Cuenta | Requiere Pago |
+|-------|-------------|-----------------|---------------|
+| 1. Basico/Gratuito | Cursos marcados como "free" | No | No |
+| 2. Medio | Cursos de nivel medio | Si (registro gratis) | No |
+| 3. Especializado | Todos los cursos (membresia) | Si | Si ($99/ano o $12/mes) |
+| 4. Curso Individual | Un curso especifico | Si | Si (precio individual) |
+
+---
+
+### Cambios en Base de Datos
+
+#### Migracion SQL
 
 ```sql
--- scholarships: Admins pueden gestionar, todos pueden ver las activas
-CREATE POLICY "Admins can manage scholarships" ON scholarships FOR ALL 
-  USING (has_role(auth.uid(), 'admin'));
-  
-CREATE POLICY "Anyone can view active scholarships" ON scholarships FOR SELECT 
-  USING (is_active = true);
+-- Agregar nivel de acceso a cursos
+ALTER TABLE courses ADD COLUMN access_level text NOT NULL DEFAULT 'premium';
+-- Valores: 'free', 'medium', 'premium'
 
--- scholarship_recipients: Admins gestionan todo, usuarios ven las suyas
-CREATE POLICY "Admins can manage recipients" ON scholarship_recipients FOR ALL 
-  USING (has_role(auth.uid(), 'admin'));
-  
-CREATE POLICY "Users can view their scholarships" ON scholarship_recipients FOR SELECT 
-  USING (auth.uid() = user_id);
+-- Agregar precio individual para compra de curso suelto
+ALTER TABLE courses ADD COLUMN individual_price numeric DEFAULT NULL;
+
+-- Crear tabla de compras individuales de cursos
+CREATE TABLE course_purchases (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL,
+  course_id uuid NOT NULL REFERENCES courses(id) ON DELETE CASCADE,
+  amount numeric NOT NULL,
+  currency text DEFAULT 'USD',
+  status text DEFAULT 'completed',
+  purchased_at timestamptz DEFAULT now(),
+  UNIQUE(user_id, course_id)
+);
+
+ALTER TABLE course_purchases ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Admins can manage all purchases" ON course_purchases 
+  FOR ALL USING (has_role(auth.uid(), 'admin'));
+
+CREATE POLICY "Users can view their purchases" ON course_purchases 
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their purchases" ON course_purchases 
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Actualizar RLS de courses para permitir acceso publico a cursos gratuitos
+-- (la politica existente ya permite SELECT si is_published = true, eso es suficiente)
+
+-- Actualizar RLS de modules para cursos gratuitos (ya permite si curso published)
+-- Actualizar RLS de lessons para cursos gratuitos (ya permite si curso published)
 ```
 
 ---
 
 ### Archivos a Crear
 
-| Archivo | Descripción |
+| Archivo | Descripcion |
 |---------|-------------|
-| `src/pages/admin/ScholarshipsManagement.tsx` | Página de gestión de becas |
-| `src/hooks/useScholarships.tsx` | Hook con queries y mutations para becas |
-| `src/components/admin/ScholarshipForm.tsx` | Formulario crear/editar beca |
-| `src/components/admin/AssignScholarshipDialog.tsx` | Modal para asignar beca a usuario |
-| `supabase/functions/send-scholarship-email/index.ts` | Edge function para notificación |
-| Migración SQL | Crear tablas y políticas |
-
----
+| `src/hooks/useCourseAccess.tsx` | Hook central de logica de acceso: verifica si un usuario puede ver un curso segun su nivel, membresia, o compras individuales |
+| `src/components/course/CourseAccessGate.tsx` | Componente que envuelve contenido y muestra opciones de pago/registro si no tiene acceso |
+| `src/components/course/PurchaseCourseDialog.tsx` | Modal para compra individual de un curso premium |
 
 ### Archivos a Modificar
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/pages/Dashboard.tsx` | Agregar ruta `/dashboard/admin-scholarships` |
-| `src/components/dashboard/AppSidebar.tsx` | Agregar enlace "Becas" en menú admin |
-| `src/components/admin/UserDetailPanel.tsx` | Mostrar becas del usuario y permitir asignar |
-| `src/hooks/useAdminUsers.tsx` | Agregar query para becas del usuario |
-| `src/pages/dashboard/Profile.tsx` | Mostrar estado de beca activa del estudiante |
-| `src/hooks/useStudentPayments.tsx` | Verificar si usuario tiene beca activa |
-| `src/pages/dashboard/RenewMembership.tsx` | Aplicar descuento de beca automáticamente |
-| `src/hooks/useEmailSettings.tsx` | Agregar tipo de email "scholarship_granted" |
+| `src/components/ProtectedRoute.tsx` | Eliminar la logica de `requireActiveMembership` que bloquea todo el dashboard. En su lugar, el acceso se verificara a nivel de curso individual |
+| `src/App.tsx` | Quitar `requireActiveMembership` del dashboard route; agregar ruta publica `/course/:courseId` para cursos gratuitos |
+| `src/pages/dashboard/CourseCatalog.tsx` | Agregar badges de nivel de acceso (Gratis, Cuenta Gratuita, Premium), filtros por nivel, mostrar precio individual si aplica |
+| `src/pages/dashboard/CourseView.tsx` | Integrar `useCourseAccess` para verificar acceso antes de mostrar contenido; mostrar `CourseAccessGate` si no tiene acceso |
+| `src/pages/admin/CoursesManagement.tsx` | Agregar selector de `access_level` (free/medium/premium) y campo `individual_price` al crear/editar cursos |
+| `src/pages/instructor/InstructorCourseEditor.tsx` | Agregar campos `access_level` e `individual_price` en la configuracion del curso |
+| `src/hooks/useCourses.tsx` | Agregar `access_level` e `individual_price` a la interfaz `Course`; crear hook `usePublicCourses` para cursos sin auth |
+| `src/pages/Payment.tsx` | Reemplazar pago fijo $99 por seleccion de planes desde la BD usando `useActivePaymentPlans` con la membresia anual destacada |
+| `src/pages/dashboard/RenewMembership.tsx` | Integrar deteccion de beca activa para descuentos automaticos |
 
 ---
 
-### Diseño de UI - Gestión de Becas
+### Logica de Acceso (useCourseAccess)
 
 ```text
-┌─────────────────────────────────────────────────────────────────┐
-│  🎓 Gestión de Becas                           [+ Nueva Beca]   │
-├─────────────────────────────────────────────────────────────────┤
-│                                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │ Total Becas  │  │ Becarios     │  │ Becas        │          │
-│  │     8        │  │ Activos: 24  │  │ Disponibles  │          │
-│  │ 5 activas    │  │              │  │     3        │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│                                                                 │
-│  [Tipos de Becas] [Becarios]                                   │
-│                                                                 │
-│  ┌─────────────────────────────────────────────────────────┐   │
-│  │ Tipos de Becas                                           │   │
-│  ├──────┬──────────┬────────┬─────────┬──────────┬────────┤   │
-│  │Nombre│   Tipo   │Descuento│Duración │Becarios  │ Estado │   │
-│  ├──────┼──────────┼────────┼─────────┼──────────┼────────┤   │
-│  │Excel │  100%    │ Total  │12 meses │  8/10    │ Activa │   │
-│  │Socio │  50%     │  50%   │ 6 meses │  12/∞    │ Activa │   │
-│  │Mérito│  $50     │ Fijo   │ 3 meses │  4/20    │ Activa │   │
-│  └──────┴──────────┴────────┴─────────┴──────────┴────────┘   │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
+checkCourseAccess(course, user, membershipStatus, purchases):
+
+  1. Si course.access_level === 'free' -> ACCESO (para todos)
+  2. Si no hay usuario -> REQUIERE REGISTRO
+  3. Si course.access_level === 'medium' -> ACCESO (solo cuenta)
+  4. Si membershipStatus === 'active' -> ACCESO (membresia cubre todo)
+  5. Si course.id esta en purchases -> ACCESO (compra individual)
+  6. Sin acceso -> Mostrar opciones: membresia o compra individual
 ```
 
 ---
 
-### Flujo de Asignación de Beca
+### Flujo del Dashboard sin Membresia
 
-```text
-Admin abre panel de usuario
-        ↓
-Tab "Becas" muestra historial
-        ↓
-Clic en "Asignar Beca"
-        ↓
-Selecciona tipo de beca disponible
-        ↓
-Define fechas y agrega notas
-        ↓
-Confirma asignación
-        ↓
-Sistema:
-  - Crea registro en scholarship_recipients
-  - Actualiza membership_status a "active"
-  - Crea/extiende suscripción
-  - Envía email de notificación
-  - Registra en historial
-```
+Actualmente si no tienes membresia, no puedes entrar al dashboard. Con el cambio:
+
+1. Usuarios sin cuenta pueden ver cursos gratuitos (ruta publica)
+2. Usuarios con cuenta pero sin membresia pueden entrar al dashboard
+3. En el dashboard ven todos los cursos pero con indicadores de acceso
+4. Al intentar abrir un curso premium sin membresia, ven opciones de pago
+5. Pueden comprar membresia completa O un curso individual
 
 ---
 
-### Integración con Pagos
+### Cambios en Payment.tsx
 
-Cuando un usuario con beca activa intenta renovar:
-
-1. El sistema detecta la beca activa
-2. Aplica el descuento automáticamente al precio
-3. Si es beca 100%, muestra que tiene acceso gratuito
-4. Si es beca parcial, muestra precio original vs. precio con beca
-
----
-
-### Email de Notificación
-
-Nueva Edge Function `send-scholarship-email`:
-- Notifica al estudiante cuando recibe una beca
-- Incluye: nombre de la beca, duración, fecha de inicio/fin
-- Se registra en email_logs
-
-Agregar configuración en `email_settings`:
-```sql
-INSERT INTO email_settings (email_type, subject, description)
-VALUES ('scholarship_granted', '¡Felicitaciones! Has recibido una beca EDAN', 
-        'Email enviado cuando se asigna una beca a un estudiante');
-```
+Transformar de pago fijo $99 a seleccion de planes:
+- Tarjeta destacada: Membresia Anual Completa ($99/ano) con badge "Mas Popular"
+- Tarjetas secundarias: Membresia Mensual ($12/mes), Niveles individuales ($29)
+- Reutilizar componente `PlanCard` existente
+- Mantener flujo de pago simulado
 
 ---
 
-### Panel de Usuario (Estudiante)
+### Cambios en Admin (CoursesManagement)
 
-En el perfil del estudiante se mostrará:
-- Badge "Becario" si tiene beca activa
-- Nombre de la beca y porcentaje de cobertura
-- Fecha de inicio y expiración
-- Días restantes con barra de progreso
-
----
-
-### Panel de Usuario (Admin - UserDetailPanel)
-
-Nueva pestaña "Becas" que muestra:
-- Historial de becas del usuario
-- Beca activa actual (si existe)
-- Botón "Asignar Beca" 
-- Opción de revocar beca activa
+Al crear/editar un curso, el admin podra:
+- Seleccionar `access_level`: Gratuito, Medio, Premium
+- Definir `individual_price` (solo para premium): precio para compra individual
+- Los cursos existentes quedaran como "premium" por defecto (no rompe nada)
 
 ---
 
-### Secuencia de Implementación
+### Secuencia de Implementacion
 
-1. **Migración SQL**: Crear tablas `scholarships` y `scholarship_recipients` con RLS
-2. **Hook useScholarships**: Queries y mutations para gestionar becas
-3. **ScholarshipsManagement.tsx**: Página completa de administración
-4. **AssignScholarshipDialog**: Modal para asignar beca desde gestión de usuarios
-5. **Integrar en UserDetailPanel**: Nueva tab de becas
-6. **Edge Function email**: Notificación de beca asignada
-7. **Integrar en RenewMembership**: Aplicar descuento de beca
-8. **Actualizar sidebar y rutas**: Agregar acceso al menú admin
-
----
-
-### Consideraciones Técnicas
-
-- Las becas no crean pagos, pero sí crean/extienden suscripciones
-- El campo `payment_method` en payments puede ser "scholarship" para registros de beca
-- Las becas tienen prioridad sobre códigos promocionales
-- Un usuario solo puede tener una beca activa a la vez
-- Al revocar una beca, se puede optar por suspender o mantener el acceso restante
-
+1. Migracion SQL: agregar columnas a courses, crear course_purchases
+2. Actualizar interfaz Course y hooks (useCourses.tsx)
+3. Crear useCourseAccess hook
+4. Crear CourseAccessGate y PurchaseCourseDialog
+5. Modificar ProtectedRoute y App.tsx (quitar bloqueo global de membresia)
+6. Actualizar CourseCatalog con badges y filtros
+7. Actualizar CourseView con verificacion de acceso
+8. Actualizar Payment.tsx con seleccion de planes
+9. Actualizar admin CoursesManagement con access_level
+10. Actualizar InstructorCourseEditor con access_level
