@@ -185,3 +185,75 @@
     transform: scale(1);
   }
 }
+
+/* Embedded file styles for rich text editor */
+.embedded-file {
+  margin: 1rem 0;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  overflow: hidden;
+  background: hsl(var(--muted) / 0.3);
+}
+
+.embedded-file-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: hsl(var(--muted) / 0.5);
+  border-bottom: 1px solid hsl(var(--border));
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.embedded-file-header a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+.embedded-file-header a:hover {
+  text-decoration: underline;
+}
+
+.embedded-pdf-viewer {
+  width: 100%;
+  height: 500px;
+  border: none;
+}
+
+.embedded-presentation-viewer {
+  width: 100%;
+  height: 450px;
+  border: none;
+}
+
+.embedded-document-link {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none !important;
+  color: hsl(var(--foreground)) !important;
+  transition: background 0.2s;
+}
+
+.embedded-document-link:hover {
+  background: hsl(var(--muted) / 0.5);
+}
+
+.embedded-document-icon {
+  font-size: 1.25rem;
+}
+
+.embedded-document-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.embedded-document-action {
+  color: hsl(var(--primary));
+  font-size: 0.75rem;
+}

@@ -36,7 +36,7 @@ const formatFileSize = (bytes: number) => {
 
 export const FileUploader = ({ 
   onFileUploaded, 
-  accept = "image/*,application/pdf,.doc,.docx,video/mp4,video/webm,audio/mpeg,audio/wav",
+  accept = "image/*,application/pdf,.doc,.docx,.ppt,.pptx,application/vnd.ms-powerpoint,application/vnd.openxmlformats-officedocument.presentationml.presentation,video/mp4,video/webm,audio/mpeg,audio/wav",
   maxSize = 50,
   className 
 }: FileUploaderProps) => {
@@ -156,7 +156,7 @@ export const FileUploader = ({
               {isUploading ? 'Subiendo...' : 'Arrastra archivos aquí o haz clic para seleccionar'}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Imágenes, PDFs, videos, audio (máx. {maxSize}MB)
+              Imágenes, PDFs, presentaciones, videos, audio (máx. {maxSize}MB)
             </p>
           </div>
         </div>
