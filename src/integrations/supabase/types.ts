@@ -147,6 +147,41 @@ export type Database = {
           },
         ]
       }
+      course_instructors: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          course_id: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          course_id: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          course_id?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "course_instructors_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       courses: {
         Row: {
           created_at: string
@@ -1161,6 +1196,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_course_instructor: {
+        Args: { _course_id: string; _user_id: string }
         Returns: boolean
       }
       issue_certificate: {

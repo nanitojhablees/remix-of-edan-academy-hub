@@ -28,22 +28,54 @@ export interface InstructorStats {
   averageProgress: number;
 }
 
-// Get instructor's own courses
+// Get instructor's own courses + co-authored courses
 export function useInstructorCourses() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
 
   return useQuery({
-    queryKey: ["instructor-courses", user?.id],
+    queryKey: ["instructor-courses", user?.id, role],
     queryFn: async () => {
       if (!user) return [];
-      const { data, error } = await supabase
+      
+      // Admin sees all courses
+      if (role === "admin") {
+        const { data, error } = await supabase
+          .from("courses")
+          .select("*")
+          .order("created_at", { ascending: false });
+        if (error) throw error;
+        return data as Course[];
+      }
+      
+      // Instructor: own courses + co-authored
+      const { data: ownCourses, error: ownError } = await supabase
         .from("courses")
         .select("*")
         .eq("instructor_id", user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
-      return data as Course[];
+      if (ownError) throw ownError;
+
+      const { data: coInstructorships } = await supabase
+        .from("course_instructors")
+        .select("course_id")
+        .eq("user_id", user.id);
+
+      const coInstructorCourseIds = coInstructorships?.map(ci => ci.course_id) || [];
+      const ownIds = new Set(ownCourses?.map(c => c.id) || []);
+      const additionalIds = coInstructorCourseIds.filter(id => !ownIds.has(id));
+
+      let coCourses: Course[] = [];
+      if (additionalIds.length > 0) {
+        const { data, error } = await supabase
+          .from("courses")
+          .select("*")
+          .in("id", additionalIds);
+        if (error) throw error;
+        coCourses = data as Course[];
+      }
+
+      return [...(ownCourses || []), ...coCourses] as Course[];
     },
     enabled: !!user,
   });
