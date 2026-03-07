@@ -19,7 +19,8 @@ import { useStudentPreview } from "@/hooks/useStudentPreview";
 export default function CourseView() {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, role } = useAuth();
+  const { isStudentPreview } = useStudentPreview();
   const { data: course, isLoading: loadingCourse } = useCourse(courseId);
   const { data: modules, isLoading: loadingModules } = useCourseModules(courseId);
   const { data: enrollment } = useEnrollment(courseId);
@@ -31,6 +32,9 @@ export default function CourseView() {
   const [lessonsMap, setLessonsMap] = useState<Record<string, any[]>>({});
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
   const [loadingCompletion, setLoadingCompletion] = useState(false);
+
+  // Admin/Instructor can always access content (unless in student preview without enrollment)
+  const canAccessContent = enrollment || ((role === "admin" || role === "instructor") && !isStudentPreview);
 
   // Load lessons for all modules
   useEffect(() => {
