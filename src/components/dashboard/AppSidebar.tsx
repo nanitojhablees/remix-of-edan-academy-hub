@@ -1,5 +1,6 @@
-import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell, CreditCard, Receipt } from "lucide-react";
+import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell, CreditCard, Receipt, Search, Compass } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useStudentPreview } from "@/hooks/useStudentPreview";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -16,11 +17,12 @@ import {
 } from "@/components/ui/sidebar";
 import logoEdan from "@/assets/logo-edan.png";
 import { NotificationBell } from "./NotificationBell";
+import { StudentPreviewToggle } from "./StudentPreviewToggle";
 
 const studentMenu = [
   { title: "Inicio", url: "/dashboard", icon: Home },
   { title: "Mis Cursos", url: "/dashboard/my-courses", icon: BookOpen },
-  { title: "Catálogo", url: "/dashboard/catalog", icon: GraduationCap },
+  { title: "Explorar Cursos", url: "/dashboard/catalog", icon: Compass },
   { title: "Certificados", url: "/dashboard/certificates", icon: Award },
   { title: "Mis Pagos", url: "/dashboard/payment-history", icon: Receipt },
   { title: "Logros", url: "/dashboard/achievements", icon: Trophy },
@@ -33,6 +35,7 @@ const instructorMenu = [
   { title: "Mis Cursos", url: "/dashboard/instructor-courses", icon: BookOpen },
   { title: "Evaluaciones", url: "/dashboard/instructor-exams", icon: FileQuestion },
   { title: "Estudiantes", url: "/dashboard/instructor-students", icon: Users },
+  { title: "Explorar Cursos", url: "/dashboard/catalog", icon: Compass },
   { title: "Perfil", url: "/dashboard/profile", icon: Settings },
 ];
 
@@ -40,6 +43,10 @@ const adminMenu = [
   { title: "Dashboard", url: "/dashboard", icon: BarChart3 },
   { title: "Usuarios", url: "/dashboard/admin-users", icon: UserCog },
   { title: "Cursos", url: "/dashboard/admin-courses", icon: BookOpen },
+  { title: "Mis Cursos (Editor)", url: "/dashboard/instructor-courses", icon: Settings },
+  { title: "Evaluaciones (Editor)", url: "/dashboard/instructor-exams", icon: FileQuestion },
+  { title: "Estudiantes", url: "/dashboard/instructor-students", icon: Users },
+  { title: "Explorar Cursos", url: "/dashboard/catalog", icon: Compass },
   { title: "Inscripciones", url: "/dashboard/admin-enrollments", icon: GraduationCap },
   { title: "Pagos", url: "/dashboard/admin-payments", icon: CreditCard },
   { title: "Becas", url: "/dashboard/admin-scholarships", icon: GraduationCap },
@@ -53,10 +60,12 @@ const adminMenu = [
 
 export function AppSidebar() {
   const { role, profile, signOut } = useAuth();
+  const { isStudentPreview } = useStudentPreview();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menu = role === "admin" ? adminMenu : role === "instructor" ? instructorMenu : studentMenu;
+  // If in student preview mode, show student menu
+  const effectiveMenu = isStudentPreview ? studentMenu : (role === "admin" ? adminMenu : role === "instructor" ? instructorMenu : studentMenu);
 
   const handleLogout = async () => {
     await signOut();
@@ -77,14 +86,24 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent>
+        {/* Student Preview Toggle */}
+        {(role === "admin" || role === "instructor") && (
+          <div className="px-4 pt-3">
+            <StudentPreviewToggle />
+          </div>
+        )}
+
         <SidebarGroup>
           <SidebarGroupLabel>
-            {role === "admin" ? "Administración" : role === "instructor" ? "Instructor" : "Estudiante"}
+            {isStudentPreview 
+              ? "Vista Alumno" 
+              : role === "admin" ? "Administración" : role === "instructor" ? "Instructor" : "Estudiante"
+            }
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menu.map((item) => (
-                <SidebarMenuItem key={item.title}>
+              {effectiveMenu.map((item) => (
+                <SidebarMenuItem key={item.title + item.url}>
                   <SidebarMenuButton
                     asChild
                     isActive={location.pathname === item.url}
