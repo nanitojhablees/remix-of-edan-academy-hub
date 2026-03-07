@@ -19,7 +19,7 @@ export function StudentPreviewProvider({ children }: { children: ReactNode }) {
   const handleSetStudentPreview = (value: boolean) => setIsStudentPreview(value);
 
   return (
-    <StudentPreviewContext.Provider value={{ isStudentPreview, toggleStudentPreview, setStudentPreview }}>
+    <StudentPreviewContext.Provider value={{ isStudentPreview, toggleStudentPreview, setStudentPreview: handleSetStudentPreview }}>
       {children}
     </StudentPreviewContext.Provider>
   );
