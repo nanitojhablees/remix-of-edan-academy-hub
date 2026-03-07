@@ -7,12 +7,14 @@ import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download, MessageSquare } from "lucide-react";
+import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download, MessageSquare, FileText, Presentation } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { RichTextViewer } from "@/components/editor/RichTextEditor";
 import { LessonDiscussion } from "@/components/comments/LessonDiscussion";
+import { ContentPlayer } from "@/components/content/ContentPlayer";
+import { useStudentPreview } from "@/hooks/useStudentPreview";
 
 export default function CourseView() {
   const { courseId } = useParams();
