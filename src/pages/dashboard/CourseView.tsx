@@ -249,12 +249,12 @@ export default function CourseView() {
                         {lessonsMap[module.id]?.map((lesson) => (
                           <button
                             key={lesson.id}
-                            onClick={() => enrollment ? setSelectedLesson(lesson.id) : null}
+                            onClick={() => canAccessContent ? setSelectedLesson(lesson.id) : null}
                             className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-muted/50 transition-colors ${
                               selectedLesson === lesson.id ? 'bg-muted' : ''
-                            } ${!enrollment ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                            } ${!canAccessContent ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                           >
-                            {!enrollment ? (
+                            {!canAccessContent ? (
                               <Lock className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                             ) : completedLessons.has(lesson.id) ? (
                               <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />
@@ -332,32 +332,11 @@ export default function CourseView() {
               </CardHeader>
               <CardContent>
                 {currentLessonData.video_url && (
-                  <div className="aspect-video bg-muted rounded-lg mb-6 overflow-hidden">
-                    {currentLessonData.video_url.includes('youtube.com') || currentLessonData.video_url.includes('youtu.be') ? (
-                      <iframe
-                        className="w-full h-full"
-                        src={currentLessonData.video_url.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/')}
-                        title={currentLessonData.title}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : currentLessonData.video_url.includes('vimeo.com') ? (
-                      <iframe
-                        className="w-full h-full"
-                        src={currentLessonData.video_url.replace('vimeo.com/', 'player.vimeo.com/video/')}
-                        title={currentLessonData.title}
-                        allow="autoplay; fullscreen; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <video
-                        className="w-full h-full"
-                        controls
-                        src={currentLessonData.video_url}
-                      >
-                        Tu navegador no soporta el elemento de video.
-                      </video>
-                    )}
+                  <div className="mb-6">
+                    <ContentPlayer 
+                      videoUrl={currentLessonData.video_url} 
+                      title={currentLessonData.title} 
+                    />
                   </div>
                 )}
 
@@ -418,10 +397,10 @@ export default function CourseView() {
               <CardContent>
                 <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-medium mb-2">
-                  {enrollment ? "Selecciona una lección" : "Inscríbete para acceder"}
+                  {canAccessContent ? "Selecciona una lección" : "Inscríbete para acceder"}
                 </h3>
                 <p className="text-muted-foreground">
-                  {enrollment 
+                  {canAccessContent 
                     ? "Elige una lección del menú lateral para comenzar"
                     : "Debes inscribirte en el curso para acceder al contenido"
                   }
