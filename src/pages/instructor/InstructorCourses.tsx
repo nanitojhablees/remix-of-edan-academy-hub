@@ -43,7 +43,7 @@ export default function InstructorCourses() {
 
   const getLevelLabel = (level: string) => {
     const labels: Record<string, string> = {
-      operaciones: "Operaciones",
+      básico: "Básico",
       tecnologias: "Tecnologías",
       decisiones: "Toma de Decisiones",
       analisis: "Análisis",
