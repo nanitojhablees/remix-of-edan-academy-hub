@@ -35,7 +35,7 @@ export default function AdminDashboard() {
         .select("course:courses(level)");
 
       const levelCounts: Record<string, number> = {
-        operaciones: 0,
+        básico: 0,
         tecnologias: 0,
         decisiones: 0,
         analisis: 0,
