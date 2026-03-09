@@ -27,7 +27,7 @@ export default function InstructorCourses() {
 
   const handleCreate = async () => {
     await createCourse.mutateAsync(newCourse);
-    setNewCourse({ title: "", description: "", level: "operaciones" });
+    setNewCourse({ title: "", description: "", level: "básico" });
     setCreateDialogOpen(false);
   };
 
