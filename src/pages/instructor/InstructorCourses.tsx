@@ -20,7 +20,7 @@ export default function InstructorCourses() {
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
-    level: "operaciones",
+    level: "básico",
   });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<string | null>(null);
