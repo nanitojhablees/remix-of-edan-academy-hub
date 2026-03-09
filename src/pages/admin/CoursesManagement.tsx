@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useNavigate } from "react-router-dom";
 
 const levelNames: Record<string, string> = {
-  operaciones: "Operaciones",
+  básico: "Básico",
   tecnologias: "Tecnologías Aplicables",
   decisiones: "Toma de Decisiones",
   analisis: "Análisis de Datos",
