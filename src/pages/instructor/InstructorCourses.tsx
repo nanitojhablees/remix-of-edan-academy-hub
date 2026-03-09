@@ -20,14 +20,14 @@ export default function InstructorCourses() {
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
-    level: "operaciones",
+    level: "básico",
   });
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<string | null>(null);
 
   const handleCreate = async () => {
     await createCourse.mutateAsync(newCourse);
-    setNewCourse({ title: "", description: "", level: "operaciones" });
+    setNewCourse({ title: "", description: "", level: "básico" });
     setCreateDialogOpen(false);
   };
 
@@ -43,7 +43,7 @@ export default function InstructorCourses() {
 
   const getLevelLabel = (level: string) => {
     const labels: Record<string, string> = {
-      operaciones: "Operaciones",
+      básico: "Básico",
       tecnologias: "Tecnologías",
       decisiones: "Toma de Decisiones",
       analisis: "Análisis",
@@ -94,7 +94,7 @@ export default function InstructorCourses() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="operaciones">Operaciones</SelectItem>
+                    <SelectItem value="básico">Básico</SelectItem>
                     <SelectItem value="tecnologias">Tecnologías</SelectItem>
                     <SelectItem value="decisiones">Toma de Decisiones</SelectItem>
                     <SelectItem value="analisis">Análisis</SelectItem>

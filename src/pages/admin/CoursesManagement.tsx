@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useNavigate } from "react-router-dom";
 
 const levelNames: Record<string, string> = {
-  operaciones: "Operaciones",
+  básico: "Básico",
   tecnologias: "Tecnologías Aplicables",
   decisiones: "Toma de Decisiones",
   analisis: "Análisis de Datos",
@@ -32,7 +32,7 @@ export default function CoursesManagement() {
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
-    level: "operaciones",
+    level: "básico",
     duration_hours: 20,
     is_published: false,
   });
@@ -80,7 +80,7 @@ export default function CoursesManagement() {
       setNewCourse({
         title: "",
         description: "",
-        level: "operaciones",
+        level: "básico",
         duration_hours: 20,
         is_published: false,
       });
@@ -192,7 +192,7 @@ export default function CoursesManagement() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="operaciones">Operaciones</SelectItem>
+                      <SelectItem value="básico">Básico</SelectItem>
                       <SelectItem value="tecnologias">Tecnologías Aplicables</SelectItem>
                       <SelectItem value="decisiones">Toma de Decisiones</SelectItem>
                       <SelectItem value="analisis">Análisis de Datos</SelectItem>

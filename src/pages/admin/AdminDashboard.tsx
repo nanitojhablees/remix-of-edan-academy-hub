@@ -35,7 +35,7 @@ export default function AdminDashboard() {
         .select("course:courses(level)");
 
       const levelCounts: Record<string, number> = {
-        operaciones: 0,
+        básico: 0,
         tecnologias: 0,
         decisiones: 0,
         analisis: 0,
@@ -48,7 +48,7 @@ export default function AdminDashboard() {
       });
 
       return [
-        { name: "Operaciones", value: levelCounts.operaciones, color: "hsl(var(--primary))" },
+        { name: "Básico", value: levelCounts.básico, color: "hsl(var(--primary))" },
         { name: "Tecnologías", value: levelCounts.tecnologias, color: "hsl(var(--secondary))" },
         { name: "Decisiones", value: levelCounts.decisiones, color: "hsl(var(--accent))" },
         { name: "Análisis", value: levelCounts.analisis, color: "hsl(var(--edan-orange))" },

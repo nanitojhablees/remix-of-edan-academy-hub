@@ -8,14 +8,14 @@ import { CourseCatalogSkeleton } from "@/components/skeletons/CourseCardSkeleton
 import { PageHeaderSkeleton } from "@/components/skeletons/PageHeaderSkeleton";
 
 const levelColors: Record<string, string> = {
-  operaciones: "bg-primary",
+  básico: "bg-primary",
   tecnologias: "bg-secondary",
   decisiones: "bg-accent",
   analisis: "bg-edan-orange",
 };
 
 const levelNames: Record<string, string> = {
-  operaciones: "Operaciones",
+  básico: "Básico",
   tecnologias: "Tecnologías Aplicables",
   decisiones: "Toma de Decisiones",
   analisis: "Análisis de Datos",
