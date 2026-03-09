@@ -15,7 +15,7 @@ const levelColors: Record<string, string> = {
 };
 
 const levelNames: Record<string, string> = {
-  operaciones: "Operaciones",
+  básico: "Básico",
   tecnologias: "Tecnologías Aplicables",
   decisiones: "Toma de Decisiones",
   analisis: "Análisis de Datos",

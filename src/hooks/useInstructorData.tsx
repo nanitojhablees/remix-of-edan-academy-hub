@@ -230,7 +230,7 @@ export function useCreateCourse() {
         .insert({
           title: courseData.title || "Nuevo Curso",
           description: courseData.description || "",
-          level: courseData.level || "operaciones",
+          level: courseData.level || "básico",
           instructor_id: user.id,
           is_published: false,
         })

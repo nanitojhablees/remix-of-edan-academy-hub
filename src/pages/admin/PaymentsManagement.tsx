@@ -721,7 +721,7 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
                   <SelectTrigger><SelectValue placeholder="Acceso completo" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">Acceso completo</SelectItem>
-                    <SelectItem value="operaciones">Operaciones</SelectItem>
+                    <SelectItem value="básico">Básico</SelectItem>
                     <SelectItem value="tecnologias">Tecnologías</SelectItem>
                     <SelectItem value="decisiones">Decisiones</SelectItem>
                     <SelectItem value="analisis">Análisis</SelectItem>

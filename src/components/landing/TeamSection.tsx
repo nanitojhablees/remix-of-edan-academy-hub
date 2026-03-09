@@ -29,7 +29,7 @@ const instructors: Instructor[] = [
   },
   {
     name: "Ing. María Fernanda López",
-    role: "Instructora Senior – Nivel Operaciones",
+    role: "Instructora Senior – Nivel Básico",
     bio: "Ingeniera civil con maestría en gestión de desastres. Ha liderado más de 50 evaluaciones EDAN en la región.",
     initials: "ML",
     social: {

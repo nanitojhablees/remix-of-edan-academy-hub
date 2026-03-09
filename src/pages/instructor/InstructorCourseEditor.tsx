@@ -721,7 +721,7 @@ export default function InstructorCourseEditor() {
                   <SelectValue placeholder="Selecciona nivel" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="operaciones">Operaciones</SelectItem>
+                  <SelectItem value="básico">Básico</SelectItem>
                   <SelectItem value="intermedio">Intermedio</SelectItem>
                   <SelectItem value="avanzado">Avanzado</SelectItem>
                   <SelectItem value="experto">Experto</SelectItem>

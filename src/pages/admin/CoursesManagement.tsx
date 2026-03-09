@@ -192,7 +192,7 @@ export default function CoursesManagement() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="operaciones">Operaciones</SelectItem>
+                      <SelectItem value="básico">Básico</SelectItem>
                       <SelectItem value="tecnologias">Tecnologías Aplicables</SelectItem>
                       <SelectItem value="decisiones">Toma de Decisiones</SelectItem>
                       <SelectItem value="analisis">Análisis de Datos</SelectItem>

@@ -15,7 +15,7 @@ import { Separator } from "@/components/ui/separator";
 const levels = [
   {
     number: 1,
-    title: "Operaciones",
+    title: "Básico",
     subtitle: "Fundamentos y procedimientos operativos",
     description: "Aprende los conceptos básicos de la metodología EDAN, técnicas de recolección de datos en campo, y protocolos de seguridad para evaluadores.",
     icon: Settings,

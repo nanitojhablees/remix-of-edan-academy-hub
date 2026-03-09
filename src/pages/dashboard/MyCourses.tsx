@@ -9,7 +9,7 @@ import { CourseListSkeleton } from "@/components/skeletons/CourseCardSkeleton";
 import { PageHeaderSkeleton } from "@/components/skeletons/PageHeaderSkeleton";
 
 const levelNames: Record<string, string> = {
-  operaciones: "Operaciones",
+  básico: "Básico",
   tecnologias: "Tecnologías Aplicables",
   decisiones: "Toma de Decisiones",
   analisis: "Análisis de Datos",

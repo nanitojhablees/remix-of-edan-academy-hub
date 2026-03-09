@@ -94,7 +94,7 @@ export default function InstructorCourses() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="operaciones">Operaciones</SelectItem>
+                    <SelectItem value="básico">Básico</SelectItem>
                     <SelectItem value="tecnologias">Tecnologías</SelectItem>
                     <SelectItem value="decisiones">Toma de Decisiones</SelectItem>
                     <SelectItem value="analisis">Análisis</SelectItem>
