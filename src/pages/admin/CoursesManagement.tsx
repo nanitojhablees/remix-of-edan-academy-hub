@@ -32,7 +32,7 @@ export default function CoursesManagement() {
   const [newCourse, setNewCourse] = useState({
     title: "",
     description: "",
-    level: "operaciones",
+    level: "básico",
     duration_hours: 20,
     is_published: false,
   });
