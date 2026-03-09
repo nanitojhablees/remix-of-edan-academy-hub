@@ -80,7 +80,7 @@ export default function CoursesManagement() {
       setNewCourse({
         title: "",
         description: "",
-        level: "operaciones",
+        level: "básico",
         duration_hours: 20,
         is_published: false,
       });
