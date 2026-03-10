@@ -27,8 +27,11 @@ export default function InstructorExams() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newExam, setNewExam] = useState({
     title: '',
-    course_id: ''
+    course_id: '',
+    module_id: ''
   });
+  
+  const { data: modules } = useCourseModules(newExam.course_id || undefined);
   
   const handleCreateExam = async () => {
     if (!newExam.title.trim() || !newExam.course_id) {
