@@ -729,6 +729,13 @@ export default function InstructorExamEditor() {
             <Separator />
             
             {/* Answer Options */}
+            {questionForm.question_type === 'open_answer' ? (
+              <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
+                <p className="text-sm text-muted-foreground">
+                  📝 Esta pregunta requiere una respuesta escrita. El instructor deberá revisar y calificar manualmente las respuestas.
+                </p>
+              </div>
+            ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
