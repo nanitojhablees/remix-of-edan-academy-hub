@@ -54,17 +54,24 @@ export interface QuestionWithOptions extends Question {
 
 // Get exams for a course
 export const useCourseExams = (courseId: string | undefined) => {
+  const { role } = useAuth();
+  
   return useQuery({
-    queryKey: ['course-exams', courseId],
+    queryKey: ['course-exams', courseId, role],
     queryFn: async () => {
       if (!courseId) return [];
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('exams')
         .select('*')
-        .eq('course_id', courseId)
-        .eq('is_published', true)
-        .order('created_at');
+        .eq('course_id', courseId);
+      
+      // Students only see published exams
+      if (role === 'estudiante') {
+        query = query.eq('is_published', true);
+      }
+      
+      const { data, error } = await query.order('created_at');
       
       if (error) throw error;
       return data as Exam[];
