@@ -260,29 +260,42 @@ export default function ExamView() {
             )}
           </CardHeader>
           <CardContent>
-            <RadioGroup
-              value={answers[question.id] || ''}
-              onValueChange={(value) => handleAnswerSelect(question.id, value)}
-            >
-              <div className="space-y-3">
-                {question.answer_options.map((option) => (
-                  <div 
-                    key={option.id} 
-                    className={`flex items-center space-x-3 p-4 rounded-lg border cursor-pointer transition-colors ${
-                      answers[question.id] === option.id 
-                        ? 'border-primary bg-primary/5' 
-                        : 'border-border hover:border-primary/50'
-                    }`}
-                    onClick={() => handleAnswerSelect(question.id, option.id)}
-                  >
-                    <RadioGroupItem value={option.id} id={option.id} />
-                    <Label htmlFor={option.id} className="flex-1 cursor-pointer">
-                      {option.option_text}
-                    </Label>
-                  </div>
-                ))}
+            {question.question_type === 'open_answer' ? (
+              <div className="space-y-2">
+                <Label>Tu respuesta:</Label>
+                <Textarea
+                  value={answers[question.id] || ''}
+                  onChange={(e) => setAnswers(prev => ({ ...prev, [question.id]: e.target.value }))}
+                  placeholder="Escribe tu respuesta aquí..."
+                  rows={5}
+                />
+                <p className="text-xs text-muted-foreground">Esta respuesta será revisada manualmente por el instructor.</p>
               </div>
-            </RadioGroup>
+            ) : (
+              <RadioGroup
+                value={answers[question.id] || ''}
+                onValueChange={(value) => handleAnswerSelect(question.id, value)}
+              >
+                <div className="space-y-3">
+                  {question.answer_options.map((option) => (
+                    <div 
+                      key={option.id} 
+                      className={`flex items-center space-x-3 p-4 rounded-lg border cursor-pointer transition-colors ${
+                        answers[question.id] === option.id 
+                          ? 'border-primary bg-primary/5' 
+                          : 'border-border hover:border-primary/50'
+                      }`}
+                      onClick={() => handleAnswerSelect(question.id, option.id)}
+                    >
+                      <RadioGroupItem value={option.id} id={option.id} />
+                      <Label htmlFor={option.id} className="flex-1 cursor-pointer">
+                        {option.option_text}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+            )}
           </CardContent>
           <CardFooter className="flex justify-between">
             <Button
