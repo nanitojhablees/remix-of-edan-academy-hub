@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download, MessageSquare, FileText, Presentation } from "lucide-react";
+import { ModuleMaterialsViewer } from "@/components/materials/ModuleMaterials";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
