@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Phone, MapPin, Briefcase, Save, Key, CreditCard, Calendar, CheckCircle, Clock, XCircle, AlertTriangle, Receipt, ChevronRight, RefreshCw } from "lucide-react";
+import { User, Mail, Phone, MapPin, Briefcase, Save, Key, CreditCard, Calendar, CheckCircle, Clock, XCircle, AlertTriangle, Receipt, ChevronRight, RefreshCw, Upload, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Link, useNavigate } from "react-router-dom";
 import { MembershipAlert } from "@/components/dashboard/MembershipAlert";
