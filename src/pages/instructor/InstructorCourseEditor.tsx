@@ -755,11 +755,12 @@ export default function InstructorCourseEditor() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="course-image">URL de imagen de portada</Label>
-              <Input
-                id="course-image"
+              <Label>Imagen de portada</Label>
+              <ImageUploader
                 value={courseImage}
-                onChange={(e) => setCourseImage(e.target.value)}
+                onChange={setCourseImage}
+                bucket="course-materials"
+                folder="banners"
                 placeholder="https://..."
               />
             </div>
