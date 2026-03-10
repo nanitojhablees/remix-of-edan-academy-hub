@@ -22,6 +22,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { ImageUploader } from "@/components/editor/ImageUploader";
+import { ModuleMaterialsEditor } from "@/components/materials/ModuleMaterials";
 import {
   AlertDialog,
   AlertDialogAction,
