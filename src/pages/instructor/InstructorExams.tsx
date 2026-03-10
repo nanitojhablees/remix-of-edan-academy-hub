@@ -218,6 +218,27 @@ export default function InstructorExams() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {newExam.course_id && modules && modules.length > 0 && (
+              <div className="space-y-2">
+                <Label>Módulo (opcional)</Label>
+                <Select
+                  value={newExam.module_id}
+                  onValueChange={(value) => setNewExam(prev => ({ ...prev, module_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un módulo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modules.map((mod) => (
+                      <SelectItem key={mod.id} value={mod.id}>
+                        {mod.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           
           <DialogFooter>
