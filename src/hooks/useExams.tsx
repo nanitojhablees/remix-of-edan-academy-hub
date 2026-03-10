@@ -210,20 +210,19 @@ export const useSubmitExam = () => {
 
 // Get all exams for instructor's courses
 export const useInstructorExams = (courseId?: string) => {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   
   return useQuery({
-    queryKey: ['instructor-exams', user?.id, courseId],
+    queryKey: ['instructor-exams', user?.id, courseId, role],
     queryFn: async () => {
       if (!user) return [];
       
-      let query = supabase
-        .from('exams')
-        .select(`
-          *,
-          courses!inner(instructor_id, title)
-        `)
-        .eq('courses.instructor_id', user.id);
+      let query = supabase.from('exams').select('*, courses(title, instructor_id)');
+      
+      // Admin sees all exams, instructor sees only their own
+      if (role !== 'admin') {
+        query = query.eq('courses.instructor_id', user.id);
+      }
       
       if (courseId) {
         query = query.eq('course_id', courseId);
@@ -232,7 +231,8 @@ export const useInstructorExams = (courseId?: string) => {
       const { data, error } = await query.order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data;
+      // Filter out entries where courses is null (for non-admin, the inner filter makes them null)
+      return (data || []).filter((e: any) => e.courses !== null);
     },
     enabled: !!user,
   });

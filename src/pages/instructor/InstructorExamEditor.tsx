@@ -183,11 +183,19 @@ export default function InstructorExamEditor() {
           { option_text: 'Falso', is_correct: !(prev.options[0]?.is_correct ?? true) },
         ]
       }));
+    } else if (type === 'open_answer') {
+      setQuestionForm(prev => ({
+        ...prev,
+        question_type: 'open_answer',
+        options: [
+          { option_text: 'Respuesta abierta (revisión manual)', is_correct: true },
+        ]
+      }));
     } else {
       setQuestionForm(prev => ({
         ...prev,
         question_type: 'multiple_choice',
-        options: prev.options.length === 2 && prev.options[0].option_text === 'Verdadero'
+        options: prev.options.length <= 2
           ? emptyMultipleChoice.options
           : prev.options,
       }));
