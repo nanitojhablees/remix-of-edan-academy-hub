@@ -26,7 +26,7 @@ import { FileUploader } from "@/components/editor/FileUploader";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type QuestionType = 'multiple_choice' | 'true_false';
+type QuestionType = 'multiple_choice' | 'true_false' | 'open_answer';
 
 interface QuestionForm {
   question_text: string;
@@ -60,9 +60,20 @@ const emptyTrueFalse: QuestionForm = {
   ]
 };
 
+const emptyOpenAnswer: QuestionForm = {
+  question_text: '',
+  question_type: 'open_answer',
+  points: 1,
+  image_url: '',
+  options: [
+    { option_text: 'Respuesta abierta (revisión manual)', is_correct: true },
+  ]
+};
+
 const questionTypeLabels: Record<QuestionType, string> = {
   multiple_choice: 'Selección Múltiple',
   true_false: 'Verdadero / Falso',
+  open_answer: 'Respuesta Abierta',
 };
 
 export default function InstructorExamEditor() {
