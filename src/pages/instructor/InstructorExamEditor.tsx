@@ -798,6 +798,7 @@ export default function InstructorExamEditor() {
                 </div>
               ))}
             </div>
+            )}
           </div>
           
           <DialogFooter>
