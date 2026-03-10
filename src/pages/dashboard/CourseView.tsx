@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useCourse, useCourseModules, useEnrollment, useMarkLessonComplete } from "@/hooks/useCourses";
 import { useCourseCertificate, useIssueCertificate } from "@/hooks/useCertificates";
 import { supabase } from "@/integrations/supabase/client";
+import { useCourseExams } from "@/hooks/useExams";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
