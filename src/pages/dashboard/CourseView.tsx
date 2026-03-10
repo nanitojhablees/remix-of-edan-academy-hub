@@ -269,6 +269,18 @@ export default function CourseView() {
                           </button>
                         ))}
                       </div>
+                      {/* Module exams */}
+                      {canAccessContent && courseExams?.filter(e => e.module_id === module.id).map(exam => (
+                        <button
+                          key={exam.id}
+                          onClick={() => navigate(`/dashboard/exam/${exam.id}`)}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-primary/5 transition-colors cursor-pointer border-t border-border/50"
+                        >
+                          <FileQuestion className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span className="flex-1 truncate">{exam.title}</span>
+                          <Badge variant="outline" className="text-xs">Evaluación</Badge>
+                        </button>
+                      ))}
                       {canAccessContent && (
                         <ModuleMaterialsViewer moduleId={module.id} />
                       )}
