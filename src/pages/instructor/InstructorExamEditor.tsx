@@ -26,7 +26,7 @@ import { FileUploader } from "@/components/editor/FileUploader";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-type QuestionType = 'multiple_choice' | 'true_false';
+type QuestionType = 'multiple_choice' | 'true_false' | 'open_answer';
 
 interface QuestionForm {
   question_text: string;
@@ -60,9 +60,20 @@ const emptyTrueFalse: QuestionForm = {
   ]
 };
 
+const emptyOpenAnswer: QuestionForm = {
+  question_text: '',
+  question_type: 'open_answer',
+  points: 1,
+  image_url: '',
+  options: [
+    { option_text: 'Respuesta abierta (revisión manual)', is_correct: true },
+  ]
+};
+
 const questionTypeLabels: Record<QuestionType, string> = {
   multiple_choice: 'Selección Múltiple',
   true_false: 'Verdadero / Falso',
+  open_answer: 'Respuesta Abierta',
 };
 
 export default function InstructorExamEditor() {
@@ -172,11 +183,19 @@ export default function InstructorExamEditor() {
           { option_text: 'Falso', is_correct: !(prev.options[0]?.is_correct ?? true) },
         ]
       }));
+    } else if (type === 'open_answer') {
+      setQuestionForm(prev => ({
+        ...prev,
+        question_type: 'open_answer',
+        options: [
+          { option_text: 'Respuesta abierta (revisión manual)', is_correct: true },
+        ]
+      }));
     } else {
       setQuestionForm(prev => ({
         ...prev,
         question_type: 'multiple_choice',
-        options: prev.options.length === 2 && prev.options[0].option_text === 'Verdadero'
+        options: prev.options.length <= 2
           ? emptyMultipleChoice.options
           : prev.options,
       }));
@@ -188,10 +207,10 @@ export default function InstructorExamEditor() {
       const q = exam.questions?.find((q: any) => q.id === questionId);
       if (q) {
         setEditingQuestionId(questionId);
-        const qType = q.question_type === 'true_false' ? 'true_false' : 'multiple_choice';
+        const qType = q.question_type as QuestionType;
         setQuestionForm({
           question_text: q.question_text,
-          question_type: qType as QuestionType,
+          question_type: (['multiple_choice', 'true_false', 'open_answer'].includes(qType) ? qType : 'multiple_choice') as QuestionType,
           points: q.points,
           image_url: q.image_url || '',
           options: q.answer_options.map((o: any) => ({
@@ -217,8 +236,10 @@ export default function InstructorExamEditor() {
       return;
     }
     
-    const validOptions = questionForm.options.filter(o => o.option_text.trim());
-    if (validOptions.length < 2) {
+    const validOptions = questionForm.question_type === 'open_answer'
+      ? questionForm.options
+      : questionForm.options.filter(o => o.option_text.trim());
+    if (questionForm.question_type !== 'open_answer' && validOptions.length < 2) {
       toast({
         title: "Error",
         description: "Debe haber al menos 2 opciones",
@@ -628,6 +649,7 @@ export default function InstructorExamEditor() {
                 <SelectContent>
                   <SelectItem value="multiple_choice">Selección Múltiple</SelectItem>
                   <SelectItem value="true_false">Verdadero / Falso</SelectItem>
+                  <SelectItem value="open_answer">Respuesta Abierta</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -707,6 +729,13 @@ export default function InstructorExamEditor() {
             <Separator />
             
             {/* Answer Options */}
+            {questionForm.question_type === 'open_answer' ? (
+              <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
+                <p className="text-sm text-muted-foreground">
+                  📝 Esta pregunta requiere una respuesta escrita. El instructor deberá revisar y calificar manualmente las respuestas.
+                </p>
+              </div>
+            ) : (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -769,6 +798,7 @@ export default function InstructorExamEditor() {
                 </div>
               ))}
             </div>
+            )}
           </div>
           
           <DialogFooter>

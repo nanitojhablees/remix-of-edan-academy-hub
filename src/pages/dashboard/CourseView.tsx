@@ -2,12 +2,13 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useCourse, useCourseModules, useEnrollment, useMarkLessonComplete } from "@/hooks/useCourses";
 import { useCourseCertificate, useIssueCertificate } from "@/hooks/useCertificates";
 import { supabase } from "@/integrations/supabase/client";
+import { useCourseExams } from "@/hooks/useExams";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download, MessageSquare, FileText, Presentation } from "lucide-react";
+import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download, MessageSquare, FileText, Presentation, FileQuestion } from "lucide-react";
 import { ModuleMaterialsViewer } from "@/components/materials/ModuleMaterials";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +27,7 @@ export default function CourseView() {
   const { data: modules, isLoading: loadingModules } = useCourseModules(courseId);
   const { data: enrollment } = useEnrollment(courseId);
   const { data: certificate } = useCourseCertificate(courseId);
+  const { data: courseExams } = useCourseExams(courseId);
   const markLessonComplete = useMarkLessonComplete();
   const issueCertificate = useIssueCertificate();
   const { toast } = useToast();
@@ -267,6 +269,18 @@ export default function CourseView() {
                           </button>
                         ))}
                       </div>
+                      {/* Module exams */}
+                      {canAccessContent && courseExams?.filter(e => e.module_id === module.id).map(exam => (
+                        <button
+                          key={exam.id}
+                          onClick={() => navigate(`/dashboard/exam/${exam.id}`)}
+                          className="w-full flex items-center gap-3 px-4 py-2 text-sm text-left hover:bg-primary/5 transition-colors cursor-pointer border-t border-border/50"
+                        >
+                          <FileQuestion className="h-4 w-4 text-primary flex-shrink-0" />
+                          <span className="flex-1 truncate">{exam.title}</span>
+                          <Badge variant="outline" className="text-xs">Evaluación</Badge>
+                        </button>
+                      ))}
                       {canAccessContent && (
                         <ModuleMaterialsViewer moduleId={module.id} />
                       )}

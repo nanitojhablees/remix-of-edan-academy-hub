@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useInstructorExams, useCreateExam, useDeleteExam } from "@/hooks/useExams";
 import { useInstructorCourses } from "@/hooks/useInstructorData";
+import { useCourseModules } from "@/hooks/useCourses";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,8 +26,11 @@ export default function InstructorExams() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newExam, setNewExam] = useState({
     title: '',
-    course_id: ''
+    course_id: '',
+    module_id: ''
   });
+  
+  const { data: modules } = useCourseModules(newExam.course_id || undefined);
   
   const handleCreateExam = async () => {
     if (!newExam.title.trim() || !newExam.course_id) {
@@ -41,11 +45,12 @@ export default function InstructorExams() {
     try {
       const exam = await createExam.mutateAsync({
         title: newExam.title,
-        course_id: newExam.course_id
+        course_id: newExam.course_id,
+        module_id: newExam.module_id || undefined,
       });
       
       setCreateDialogOpen(false);
-      setNewExam({ title: '', course_id: '' });
+      setNewExam({ title: '', course_id: '', module_id: '' });
       navigate(`/dashboard/exam-editor/${exam.id}`);
       
       toast({
@@ -213,6 +218,27 @@ export default function InstructorExams() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {newExam.course_id && modules && modules.length > 0 && (
+              <div className="space-y-2">
+                <Label>Módulo (opcional)</Label>
+                <Select
+                  value={newExam.module_id}
+                  onValueChange={(value) => setNewExam(prev => ({ ...prev, module_id: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un módulo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {modules.map((mod) => (
+                      <SelectItem key={mod.id} value={mod.id}>
+                        {mod.title}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           
           <DialogFooter>
