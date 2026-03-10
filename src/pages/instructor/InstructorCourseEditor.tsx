@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, Plus, Save, BookOpen, FileText, Video, Trash2, GripVertical, 
-  Edit, Eye, EyeOff, Clock, Settings
+  Edit, Eye, EyeOff, Clock, Settings, FileQuestion
 } from "lucide-react";
 import { useCourse, useCourseModules, useModuleLessons } from "@/hooks/useCourses";
+import { useCreateExam, useInstructorExams, useDeleteExam } from "@/hooks/useExams";
 import { 
   useCreateModule, useCreateLesson, useUpdateCourse, useUpdateModule, 
   useDeleteModule, useUpdateLesson, useDeleteLesson, useToggleCoursePublish,
