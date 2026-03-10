@@ -649,6 +649,7 @@ export default function InstructorExamEditor() {
                 <SelectContent>
                   <SelectItem value="multiple_choice">Selección Múltiple</SelectItem>
                   <SelectItem value="true_false">Verdadero / Falso</SelectItem>
+                  <SelectItem value="open_answer">Respuesta Abierta</SelectItem>
                 </SelectContent>
               </Select>
             </div>
