@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useInstructorExams, useCreateExam, useDeleteExam } from "@/hooks/useExams";
 import { useInstructorCourses } from "@/hooks/useInstructorData";
 import { useCourseModules } from "@/hooks/useCourses";
-import { useInstructorCourses } from "@/hooks/useInstructorData";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
