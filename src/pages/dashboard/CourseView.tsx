@@ -246,7 +246,7 @@ export default function CourseView() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-0">
-                      <div className="space-y-1 pb-4">
+                      <div className="space-y-1 pb-2">
                         {lessonsMap[module.id]?.map((lesson) => (
                           <button
                             key={lesson.id}
@@ -267,6 +267,9 @@ export default function CourseView() {
                           </button>
                         ))}
                       </div>
+                      {canAccessContent && (
+                        <ModuleMaterialsViewer moduleId={module.id} />
+                      )}
                     </AccordionContent>
                   </AccordionItem>
                 ))}
