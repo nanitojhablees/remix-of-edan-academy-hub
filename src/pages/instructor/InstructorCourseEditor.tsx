@@ -22,6 +22,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { RichTextEditor } from "@/components/editor/RichTextEditor";
 import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
+import { ImageUploader } from "@/components/editor/ImageUploader";
+import { ModuleMaterialsEditor } from "@/components/materials/ModuleMaterials";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -753,11 +755,12 @@ export default function InstructorCourseEditor() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="course-image">URL de imagen de portada</Label>
-              <Input
-                id="course-image"
+              <Label>Imagen de portada</Label>
+              <ImageUploader
                 value={courseImage}
-                onChange={(e) => setCourseImage(e.target.value)}
+                onChange={setCourseImage}
+                bucket="course-materials"
+                folder="banners"
                 placeholder="https://..."
               />
             </div>
@@ -843,6 +846,7 @@ export default function InstructorCourseEditor() {
                       onDelete={() => deleteModule.mutate(module.id)}
                     >
                       <ModuleLessons moduleId={module.id} moduleTitle={module.title} />
+                      <ModuleMaterialsEditor moduleId={module.id} />
                     </SortableModuleItem>
                   ))}
                 </div>

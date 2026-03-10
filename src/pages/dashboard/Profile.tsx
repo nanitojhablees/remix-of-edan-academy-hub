@@ -12,10 +12,62 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { User, Mail, Phone, MapPin, Briefcase, Save, Key, CreditCard, Calendar, CheckCircle, Clock, XCircle, AlertTriangle, Receipt, ChevronRight, RefreshCw } from "lucide-react";
+import { User, Mail, Phone, MapPin, Briefcase, Save, Key, CreditCard, Calendar, CheckCircle, Clock, XCircle, AlertTriangle, Receipt, ChevronRight, RefreshCw, Upload, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Link, useNavigate } from "react-router-dom";
 import { MembershipAlert } from "@/components/dashboard/MembershipAlert";
+import { supabase as sb } from "@/integrations/supabase/client";
+import { toast as sonnerToast } from "sonner";
+
+function AvatarUpload({ userId, currentUrl, initials }: { userId?: string; currentUrl?: string | null; initials: string }) {
+  const [uploading, setUploading] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(currentUrl || '');
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userId) return;
+    if (file.size > 5 * 1024 * 1024) {
+      sonnerToast.error('La imagen no puede superar 5MB');
+      return;
+    }
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${userId}/${Date.now()}.${ext}`;
+      const { data, error } = await sb.storage.from('avatars').upload(path, file, { cacheControl: '3600', upsert: true });
+      if (error) throw error;
+      const { data: urlData } = sb.storage.from('avatars').getPublicUrl(data.path);
+      const newUrl = urlData.publicUrl;
+      await sb.from('profiles').update({ avatar_url: newUrl }).eq('user_id', userId);
+      setAvatarUrl(newUrl);
+      sonnerToast.success('Foto actualizada');
+    } catch (err: any) {
+      sonnerToast.error(err.message || 'Error al subir foto');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="relative group">
+      {avatarUrl ? (
+        <img src={avatarUrl} alt="Avatar" className="w-20 h-20 rounded-full object-cover border-2 border-border" />
+      ) : (
+        <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
+          {initials}
+        </div>
+      )}
+      <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+        {uploading ? (
+          <Loader2 className="h-5 w-5 animate-spin text-white" />
+        ) : (
+          <Upload className="h-5 w-5 text-white" />
+        )}
+        <input type="file" accept="image/png,image/jpeg,image/webp" onChange={handleUpload} className="hidden" disabled={uploading} />
+      </label>
+    </div>
+  );
+}
 
 interface ActiveSubscription {
   id: string;
@@ -225,9 +277,11 @@ export default function Profile() {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
-              {profile?.first_name?.[0]}{profile?.last_name?.[0]}
-            </div>
+            <AvatarUpload 
+              userId={user?.id}
+              currentUrl={profile?.avatar_url}
+              initials={`${profile?.first_name?.[0] || ''}${profile?.last_name?.[0] || ''}`}
+            />
             <div>
               <h2 className="text-xl font-semibold">
                 {profile?.first_name} {profile?.last_name}

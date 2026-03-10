@@ -13,6 +13,7 @@ interface Profile {
   profession: string | null;
   phone: string | null;
   membership_status: string;
+  avatar_url: string | null;
   created_at: string;
   updated_at: string;
   last_login: string | null;

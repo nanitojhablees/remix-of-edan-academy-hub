@@ -8,6 +8,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Clock, BookOpen, PlayCircle, CheckCircle, Lock, Award, Download, MessageSquare, FileText, Presentation } from "lucide-react";
+import { ModuleMaterialsViewer } from "@/components/materials/ModuleMaterials";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
@@ -245,7 +246,7 @@ export default function CourseView() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="pb-0">
-                      <div className="space-y-1 pb-4">
+                      <div className="space-y-1 pb-2">
                         {lessonsMap[module.id]?.map((lesson) => (
                           <button
                             key={lesson.id}
@@ -266,6 +267,9 @@ export default function CourseView() {
                           </button>
                         ))}
                       </div>
+                      {canAccessContent && (
+                        <ModuleMaterialsViewer moduleId={module.id} />
+                      )}
                     </AccordionContent>
                   </AccordionItem>
                 ))}
