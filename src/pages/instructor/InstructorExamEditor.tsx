@@ -236,8 +236,10 @@ export default function InstructorExamEditor() {
       return;
     }
     
-    const validOptions = questionForm.options.filter(o => o.option_text.trim());
-    if (validOptions.length < 2) {
+    const validOptions = questionForm.question_type === 'open_answer'
+      ? questionForm.options
+      : questionForm.options.filter(o => o.option_text.trim());
+    if (questionForm.question_type !== 'open_answer' && validOptions.length < 2) {
       toast({
         title: "Error",
         description: "Debe haber al menos 2 opciones",
