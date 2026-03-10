@@ -27,6 +27,7 @@ export default function CourseView() {
   const { data: modules, isLoading: loadingModules } = useCourseModules(courseId);
   const { data: enrollment } = useEnrollment(courseId);
   const { data: certificate } = useCourseCertificate(courseId);
+  const { data: courseExams } = useCourseExams(courseId);
   const markLessonComplete = useMarkLessonComplete();
   const issueCertificate = useIssueCertificate();
   const { toast } = useToast();
