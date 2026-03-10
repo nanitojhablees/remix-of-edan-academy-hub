@@ -225,9 +225,11 @@ export default function Profile() {
       <Card className="mb-6">
         <CardContent className="pt-6">
           <div className="flex items-center gap-6">
-            <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-2xl font-bold">
-              {profile?.first_name?.[0]}{profile?.last_name?.[0]}
-            </div>
+            <AvatarUpload 
+              userId={user?.id}
+              currentUrl={profile?.avatar_url}
+              initials={`${profile?.first_name?.[0] || ''}${profile?.last_name?.[0] || ''}`}
+            />
             <div>
               <h2 className="text-xl font-semibold">
                 {profile?.first_name} {profile?.last_name}
