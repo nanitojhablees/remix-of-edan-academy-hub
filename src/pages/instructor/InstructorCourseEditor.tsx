@@ -408,6 +408,75 @@ function ModuleLessons({ moduleId, moduleTitle }: { moduleId: string; moduleTitl
   );
 }
 
+// Module Exams: shows exams for a module and allows creating new ones
+function ModuleExams({ moduleId, courseId }: { moduleId: string; courseId: string }) {
+  const navigate = useNavigate();
+  const { data: allExams } = useInstructorExams(courseId);
+  const createExam = useCreateExam();
+  const deleteExam = useDeleteExam();
+  const { toast } = useToast();
+
+  const moduleExams = allExams?.filter((e: any) => e.module_id === moduleId) || [];
+
+  const handleCreateExam = async () => {
+    try {
+      const exam = await createExam.mutateAsync({
+        title: 'Nueva Evaluación',
+        course_id: courseId,
+        module_id: moduleId,
+      });
+      navigate(`/dashboard/exam-editor/${exam.id}`);
+    } catch (error) {
+      toast({ title: "Error", description: "No se pudo crear la evaluación", variant: "destructive" });
+    }
+  };
+
+  return (
+    <div className="space-y-1 mt-2">
+      {moduleExams.map((exam: any) => (
+        <div
+          key={exam.id}
+          className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20 hover:bg-primary/10 transition-colors group"
+        >
+          <FileQuestion className="h-4 w-4 text-primary flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="font-medium text-sm truncate block">{exam.title}</span>
+            <Badge variant={exam.is_published ? 'default' : 'secondary'} className="text-xs mt-0.5">
+              {exam.is_published ? 'Publicado' : 'Borrador'}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => navigate(`/dashboard/exam-editor/${exam.id}`)}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-destructive hover:text-destructive"
+              onClick={() => {
+                if (confirm('¿Eliminar esta evaluación?')) {
+                  deleteExam.mutate(exam.id);
+                }
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      ))}
+      <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={handleCreateExam} disabled={createExam.isPending}>
+        <FileQuestion className="h-4 w-4 mr-2" />
+        {createExam.isPending ? 'Creando...' : 'Añadir evaluación'}
+      </Button>
+    </div>
+  );
+}
+
 // Sortable Module Item
 function SortableModuleItem({ 
   module, 
