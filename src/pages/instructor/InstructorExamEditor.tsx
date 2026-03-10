@@ -207,10 +207,10 @@ export default function InstructorExamEditor() {
       const q = exam.questions?.find((q: any) => q.id === questionId);
       if (q) {
         setEditingQuestionId(questionId);
-        const qType = q.question_type === 'true_false' ? 'true_false' : 'multiple_choice';
+        const qType = q.question_type as QuestionType;
         setQuestionForm({
           question_text: q.question_text,
-          question_type: qType as QuestionType,
+          question_type: (['multiple_choice', 'true_false', 'open_answer'].includes(qType) ? qType : 'multiple_choice') as QuestionType,
           points: q.points,
           image_url: q.image_url || '',
           options: q.answer_options.map((o: any) => ({
