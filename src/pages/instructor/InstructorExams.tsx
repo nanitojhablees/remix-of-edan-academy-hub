@@ -51,7 +51,7 @@ export default function InstructorExams() {
       });
       
       setCreateDialogOpen(false);
-      setNewExam({ title: '', course_id: '' });
+      setNewExam({ title: '', course_id: '', module_id: '' });
       navigate(`/dashboard/exam-editor/${exam.id}`);
       
       toast({
