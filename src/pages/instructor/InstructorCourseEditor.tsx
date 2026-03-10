@@ -846,6 +846,7 @@ export default function InstructorCourseEditor() {
                       onDelete={() => deleteModule.mutate(module.id)}
                     >
                       <ModuleLessons moduleId={module.id} moduleTitle={module.title} />
+                      <ModuleMaterialsEditor moduleId={module.id} />
                     </SortableModuleItem>
                   ))}
                 </div>
