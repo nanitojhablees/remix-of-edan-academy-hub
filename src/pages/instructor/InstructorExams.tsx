@@ -46,7 +46,8 @@ export default function InstructorExams() {
     try {
       const exam = await createExam.mutateAsync({
         title: newExam.title,
-        course_id: newExam.course_id
+        course_id: newExam.course_id,
+        module_id: newExam.module_id || undefined,
       });
       
       setCreateDialogOpen(false);
