@@ -703,7 +703,8 @@ export default function InstructorCourseEditor() {
       level: courseLevel,
       duration_hours: courseDuration,
       image_url: courseImage || null,
-    });
+      price: coursePrice,
+    } as any);
   };
 
   const handleTogglePublish = () => {
