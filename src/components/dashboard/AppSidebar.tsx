@@ -48,6 +48,7 @@ const adminMenu = [
   { title: "Estudiantes", url: "/dashboard/instructor-students", icon: Users },
   { title: "Explorar Cursos", url: "/dashboard/catalog", icon: Compass },
   { title: "Inscripciones", url: "/dashboard/admin-enrollments", icon: GraduationCap },
+  { title: "Solicitudes Matrícula", url: "/dashboard/admin-enrollment-requests", icon: ClipboardList },
   { title: "Pagos", url: "/dashboard/admin-payments", icon: CreditCard },
   { title: "Becas", url: "/dashboard/admin-scholarships", icon: GraduationCap },
   { title: "Exámenes", url: "/dashboard/admin-exams", icon: FileQuestion },
