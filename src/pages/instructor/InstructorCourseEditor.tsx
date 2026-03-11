@@ -623,6 +623,7 @@ export default function InstructorCourseEditor() {
   const [courseLevel, setCourseLevel] = useState("");
   const [courseDuration, setCourseDuration] = useState(0);
   const [courseImage, setCourseImage] = useState("");
+  const [coursePrice, setCoursePrice] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -643,6 +644,7 @@ export default function InstructorCourseEditor() {
       setCourseLevel(course.level);
       setCourseDuration(course.duration_hours || 0);
       setCourseImage(course.image_url || "");
+      setCoursePrice(course.price || 0);
     }
   }, [course]);
 
@@ -701,7 +703,8 @@ export default function InstructorCourseEditor() {
       level: courseLevel,
       duration_hours: courseDuration,
       image_url: courseImage || null,
-    });
+      price: coursePrice,
+    } as any);
   };
 
   const handleTogglePublish = () => {
@@ -813,7 +816,7 @@ export default function InstructorCourseEditor() {
             />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="course-duration">Duración estimada (horas)</Label>
               <Input
@@ -822,6 +825,18 @@ export default function InstructorCourseEditor() {
                 min="0"
                 value={courseDuration}
                 onChange={(e) => setCourseDuration(parseInt(e.target.value) || 0)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="course-price">Precio (USD)</Label>
+              <Input
+                id="course-price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={coursePrice}
+                onChange={(e) => setCoursePrice(parseFloat(e.target.value) || 0)}
+                placeholder="0 = Gratis"
               />
             </div>
             <div className="space-y-2">

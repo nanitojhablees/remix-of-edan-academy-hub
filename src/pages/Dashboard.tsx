@@ -25,6 +25,7 @@ import EnrollmentsManagement from "./admin/EnrollmentsManagement";
 import NotificationsManagement from "./admin/NotificationsManagement";
 import PaymentsManagement from "./admin/PaymentsManagement";
 import ScholarshipsManagement from "./admin/ScholarshipsManagement";
+import EnrollmentRequestsManagement from "./admin/EnrollmentRequestsManagement";
 import InstructorDashboard from "./instructor/InstructorDashboard";
 import InstructorCourses from "./instructor/InstructorCourses";
 import InstructorStudents from "./instructor/InstructorStudents";
@@ -153,6 +154,11 @@ function DashboardRoutes() {
       <Route path="admin-enrollments" element={
         <RoleRoute allowedRoles={["admin"]}>
           <EnrollmentsManagement />
+        </RoleRoute>
+      } />
+      <Route path="admin-enrollment-requests" element={
+        <RoleRoute allowedRoles={["admin"]}>
+          <EnrollmentRequestsManagement />
         </RoleRoute>
       } />
       <Route path="admin-notifications" element={
