@@ -45,7 +45,7 @@ export default function CourseView() {
   const canAccessContent = enrollment || isPrivileged;
 
   // Course is free if price is 0 or null
-  const isFree = !course?.price || (course?.price as number) <= 0;
+  const isFree = !course?.price || course.price <= 0;
 
   // Load lessons for all modules
   useEffect(() => {
