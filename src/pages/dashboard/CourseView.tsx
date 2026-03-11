@@ -418,7 +418,7 @@ export default function CourseView() {
         onOpenChange={setEnrollModalOpen}
         courseId={courseId || ""}
         courseTitle={course.title}
-        coursePrice={(course as any).price || 0}
+        coursePrice={course.price || 0}
       />
     </div>
   );
