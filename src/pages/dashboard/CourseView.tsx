@@ -395,7 +395,7 @@ export default function CourseView() {
                 ) : (
                   <Button onClick={() => setEnrollModalOpen(true)} className="gap-2">
                     <ShoppingCart className="h-4 w-4" />
-                    {isFree ? "Inscribirse gratis" : `Inscribirse — $${(course as any).price}`}
+                    {isFree ? "Inscribirse gratis" : `Inscribirse — $${course.price}`}
                   </Button>
                 )}
               </CardContent>
