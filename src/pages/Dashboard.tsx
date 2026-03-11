@@ -156,6 +156,11 @@ function DashboardRoutes() {
           <EnrollmentsManagement />
         </RoleRoute>
       } />
+      <Route path="admin-enrollment-requests" element={
+        <RoleRoute allowedRoles={["admin"]}>
+          <EnrollmentRequestsManagement />
+        </RoleRoute>
+      } />
       <Route path="admin-notifications" element={
         <RoleRoute allowedRoles={["admin"]}>
           <NotificationsManagement />
