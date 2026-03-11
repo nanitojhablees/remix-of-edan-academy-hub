@@ -1,4 +1,4 @@
-import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell, CreditCard, Receipt, Search, Compass } from "lucide-react";
+import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell, CreditCard, Receipt, Search, Compass, ClipboardList } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudentPreview } from "@/hooks/useStudentPreview";
 import { useNavigate, useLocation } from "react-router-dom";
