@@ -289,7 +289,7 @@ export default function CourseView() {
                   ) : (
                     <Button className="w-full gap-2" onClick={() => setEnrollModalOpen(true)}>
                       <ShoppingCart className="h-4 w-4" />
-                      {isFree ? "Inscribirse gratis" : `Inscribirse — $${(course as any).price}`}
+                      {isFree ? "Inscribirse gratis" : `Inscribirse — $${course.price}`}
                     </Button>
                   )}
                 </div>
