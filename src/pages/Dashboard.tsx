@@ -25,6 +25,7 @@ import EnrollmentsManagement from "./admin/EnrollmentsManagement";
 import NotificationsManagement from "./admin/NotificationsManagement";
 import PaymentsManagement from "./admin/PaymentsManagement";
 import ScholarshipsManagement from "./admin/ScholarshipsManagement";
+import EnrollmentRequestsManagement from "./admin/EnrollmentRequestsManagement";
 import InstructorDashboard from "./instructor/InstructorDashboard";
 import InstructorCourses from "./instructor/InstructorCourses";
 import InstructorStudents from "./instructor/InstructorStudents";
