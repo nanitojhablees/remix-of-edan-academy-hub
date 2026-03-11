@@ -623,6 +623,7 @@ export default function InstructorCourseEditor() {
   const [courseLevel, setCourseLevel] = useState("");
   const [courseDuration, setCourseDuration] = useState(0);
   const [courseImage, setCourseImage] = useState("");
+  const [coursePrice, setCoursePrice] = useState(0);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
