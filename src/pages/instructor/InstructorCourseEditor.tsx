@@ -816,7 +816,7 @@ export default function InstructorCourseEditor() {
             />
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="course-duration">Duración estimada (horas)</Label>
               <Input
@@ -825,6 +825,18 @@ export default function InstructorCourseEditor() {
                 min="0"
                 value={courseDuration}
                 onChange={(e) => setCourseDuration(parseInt(e.target.value) || 0)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="course-price">Precio (USD)</Label>
+              <Input
+                id="course-price"
+                type="number"
+                min="0"
+                step="0.01"
+                value={coursePrice}
+                onChange={(e) => setCoursePrice(parseFloat(e.target.value) || 0)}
+                placeholder="0 = Gratis"
               />
             </div>
             <div className="space-y-2">
