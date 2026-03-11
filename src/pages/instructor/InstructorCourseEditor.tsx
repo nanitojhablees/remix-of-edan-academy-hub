@@ -644,6 +644,7 @@ export default function InstructorCourseEditor() {
       setCourseLevel(course.level);
       setCourseDuration(course.duration_hours || 0);
       setCourseImage(course.image_url || "");
+      setCoursePrice(course.price || 0);
     }
   }, [course]);
 
