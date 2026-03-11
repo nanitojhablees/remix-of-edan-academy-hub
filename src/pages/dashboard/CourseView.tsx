@@ -265,8 +265,8 @@ export default function CourseView() {
             <CardHeader>
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <Badge variant="outline" className="w-fit">Nivel {course.level}</Badge>
-                {(course as any).price > 0 && (
-                  <span className="text-2xl font-bold text-foreground">${(course as any).price}</span>
+                {course.price > 0 && (
+                  <span className="text-2xl font-bold text-foreground">${course.price}</span>
                 )}
                 {isCompleted && certificate && (
                   <Button size="sm" onClick={handleDownloadCertificate} className="gap-2">
