@@ -17,9 +17,9 @@ import { useNavigate } from "react-router-dom";
 
 const levelNames: Record<string, string> = {
   básico: "Básico",
-  tecnologias: "Tecnologías Aplicables",
-  decisiones: "Toma de Decisiones",
-  analisis: "Análisis de Datos",
+  intermedio: "Intermedio",
+  avanzado: "Avanzado",
+  experto: "Experto",
 };
 
 export default function CoursesManagement() {
@@ -193,9 +193,9 @@ export default function CoursesManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="básico">Básico</SelectItem>
-                      <SelectItem value="tecnologias">Tecnologías Aplicables</SelectItem>
-                      <SelectItem value="decisiones">Toma de Decisiones</SelectItem>
-                      <SelectItem value="analisis">Análisis de Datos</SelectItem>
+                      <SelectItem value="intermedio">Intermedio</SelectItem>
+                      <SelectItem value="avanzado">Avanzado</SelectItem>
+                      <SelectItem value="experto">Experto</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
