@@ -1,7 +1,7 @@
 import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell, CreditCard, Receipt, Search, Compass, ClipboardList } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudentPreview } from "@/hooks/useStudentPreview";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -109,10 +109,10 @@ export function AppSidebar() {
                     asChild
                     isActive={location.pathname === item.url}
                   >
-                    <a href={item.url}>
+                    <Link to={item.url}>
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
-                    </a>
+                    </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
