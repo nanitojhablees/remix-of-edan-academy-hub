@@ -191,9 +191,12 @@ export default function Dashboard() {
         <SidebarProvider>
           <div className="min-h-screen flex w-full">
             <AppSidebar />
-            <main className="flex-1 p-6 overflow-auto">
-              <DashboardRoutes />
-            </main>
+            <div className="flex-1 flex flex-col overflow-auto">
+              <StudentPreviewBanner />
+              <main className="flex-1 p-6">
+                <DashboardRoutes />
+              </main>
+            </div>
           </div>
         </SidebarProvider>
       </StudentPreviewProvider>
