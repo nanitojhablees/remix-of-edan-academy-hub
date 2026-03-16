@@ -35,6 +35,7 @@ import InstructorExamEditor from "./instructor/InstructorExamEditor";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudentPreview } from "@/hooks/useStudentPreview";
 import { PageTransition } from "@/components/PageTransition";
+import { StudentPreviewBanner } from "@/components/dashboard/StudentPreviewBanner";
 
 type AppRole = "admin" | "instructor" | "estudiante";
 

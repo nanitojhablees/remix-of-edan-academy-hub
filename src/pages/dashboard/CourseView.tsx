@@ -40,9 +40,10 @@ export default function CourseView() {
   const [loadingCompletion, setLoadingCompletion] = useState(false);
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
 
-  // Admin/Instructor can always access content (unless in student preview without enrollment)
+  // In student preview: simulate a student WITH active enrollment (full content access, no edit controls)
+  // Normal: admin/instructor always have access
   const isPrivileged = (role === "admin" || role === "instructor") && !isStudentPreview;
-  const canAccessContent = enrollment || isPrivileged;
+  const canAccessContent = enrollment || isPrivileged || isStudentPreview;
 
   // Course is free if price is 0 or null
   const isFree = !course?.price || course.price <= 0;
