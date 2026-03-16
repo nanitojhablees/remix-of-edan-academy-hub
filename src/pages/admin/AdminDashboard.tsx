@@ -36,9 +36,9 @@ export default function AdminDashboard() {
 
       const levelCounts: Record<string, number> = {
         básico: 0,
-        tecnologias: 0,
-        decisiones: 0,
-        analisis: 0,
+        intermedio: 0,
+        avanzado: 0,
+        experto: 0,
       };
 
       data?.forEach((e: any) => {
@@ -49,9 +49,9 @@ export default function AdminDashboard() {
 
       return [
         { name: "Básico", value: levelCounts.básico, color: "hsl(var(--primary))" },
-        { name: "Tecnologías", value: levelCounts.tecnologias, color: "hsl(var(--secondary))" },
-        { name: "Decisiones", value: levelCounts.decisiones, color: "hsl(var(--accent))" },
-        { name: "Análisis", value: levelCounts.analisis, color: "hsl(var(--edan-orange))" },
+        { name: "Intermedio", value: levelCounts.intermedio, color: "hsl(var(--secondary))" },
+        { name: "Avanzado", value: levelCounts.avanzado, color: "hsl(var(--accent))" },
+        { name: "Experto", value: levelCounts.experto, color: "hsl(var(--edan-orange))" },
       ];
     },
   });

@@ -10,9 +10,9 @@ import { PageHeaderSkeleton } from "@/components/skeletons/PageHeaderSkeleton";
 
 const levelNames: Record<string, string> = {
   básico: "Básico",
-  tecnologias: "Tecnologías Aplicables",
-  decisiones: "Toma de Decisiones",
-  analisis: "Análisis de Datos",
+  intermedio: "Intermedio",
+  avanzado: "Avanzado",
+  experto: "Experto",
 };
 
 export default function MyCourses() {

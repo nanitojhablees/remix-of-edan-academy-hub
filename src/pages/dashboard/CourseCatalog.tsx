@@ -12,16 +12,16 @@ import { useState } from "react";
 
 const levelColors: Record<string, string> = {
   básico: "bg-primary",
-  tecnologias: "bg-secondary",
-  decisiones: "bg-accent",
-  analisis: "bg-edan-orange",
+  intermedio: "bg-secondary",
+  avanzado: "bg-accent",
+  experto: "bg-edan-orange",
 };
 
 const levelNames: Record<string, string> = {
   básico: "Básico",
-  tecnologias: "Tecnologías Aplicables",
-  decisiones: "Toma de Decisiones",
-  analisis: "Análisis de Datos",
+  intermedio: "Intermedio",
+  avanzado: "Avanzado",
+  experto: "Experto",
 };
 
 export default function CourseCatalog() {

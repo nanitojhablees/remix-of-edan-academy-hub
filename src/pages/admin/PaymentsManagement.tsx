@@ -722,9 +722,9 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
                   <SelectContent>
                     <SelectItem value="">Acceso completo</SelectItem>
                     <SelectItem value="básico">Básico</SelectItem>
-                    <SelectItem value="tecnologias">Tecnologías</SelectItem>
-                    <SelectItem value="decisiones">Decisiones</SelectItem>
-                    <SelectItem value="analisis">Análisis</SelectItem>
+                    <SelectItem value="intermedio">Intermedio</SelectItem>
+                    <SelectItem value="avanzado">Avanzado</SelectItem>
+                    <SelectItem value="experto">Experto</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

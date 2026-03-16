@@ -193,9 +193,9 @@ export default function CoursesManagement() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="básico">Básico</SelectItem>
-                      <SelectItem value="tecnologias">Tecnologías Aplicables</SelectItem>
-                      <SelectItem value="decisiones">Toma de Decisiones</SelectItem>
-                      <SelectItem value="analisis">Análisis de Datos</SelectItem>
+                      <SelectItem value="intermedio">Intermedio</SelectItem>
+                      <SelectItem value="avanzado">Avanzado</SelectItem>
+                      <SelectItem value="experto">Experto</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
