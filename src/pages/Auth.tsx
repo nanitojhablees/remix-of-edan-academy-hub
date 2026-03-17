@@ -42,13 +42,16 @@ export default function Auth() {
 
   useEffect(() => {
     if (user && profile) {
-      if (profile.membership_status !== "active") {
+      // Admins and instructors always go to dashboard, skip payment gate
+      if (role === "admin" || role === "instructor") {
+        navigate("/dashboard");
+      } else if (profile.membership_status !== "active") {
         navigate("/payment");
       } else {
         navigate("/dashboard");
       }
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, role, navigate]);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
