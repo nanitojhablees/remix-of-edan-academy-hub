@@ -18,10 +18,10 @@ interface Instructor {
 
 const instructors: Instructor[] = [
   {
-    name: "Dr. Carlos Méndez",
+    name: "Krisnader Garcia",
     role: "Director Académico",
     bio: "Especialista en gestión de riesgos con más de 20 años de experiencia en organismos internacionales de ayuda humanitaria.",
-    initials: "CM",
+    initials: "KG",
     social: {
       linkedin: "#",
       twitter: "#",
