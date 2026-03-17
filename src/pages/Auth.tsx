@@ -36,19 +36,22 @@ export default function Auth() {
   const [isRegister, setIsRegister] = useState(searchParams.get("mode") === "register");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user, profile } = useAuth();
+  const { signIn, signUp, user, profile, role } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user && profile) {
-      if (profile.membership_status !== "active") {
+      // Admins and instructors always go to dashboard, skip payment gate
+      if (role === "admin" || role === "instructor") {
+        navigate("/dashboard");
+      } else if (profile.membership_status !== "active") {
         navigate("/payment");
       } else {
         navigate("/dashboard");
       }
     }
-  }, [user, profile, navigate]);
+  }, [user, profile, role, navigate]);
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
