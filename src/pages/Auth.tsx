@@ -36,7 +36,7 @@ export default function Auth() {
   const [isRegister, setIsRegister] = useState(searchParams.get("mode") === "register");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user, profile } = useAuth();
+  const { signIn, signUp, user, profile, role } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
