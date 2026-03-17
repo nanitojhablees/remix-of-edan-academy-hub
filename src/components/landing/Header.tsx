@@ -49,12 +49,20 @@ export function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-4">
-            <Button variant="ghost" asChild>
-              <Link to="/auth">Iniciar Sesión</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/auth?mode=register">Registrarse</Link>
-            </Button>
+            {!loading && user ? (
+              <Button asChild>
+                <Link to="/dashboard">Ir al Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/auth">Iniciar Sesión</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/auth?mode=register">Registrarse</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
