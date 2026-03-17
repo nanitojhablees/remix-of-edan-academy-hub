@@ -90,12 +90,20 @@ export function Header() {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button variant="ghost" asChild className="justify-start">
-                  <Link to="/auth">Iniciar Sesión</Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/auth?mode=register">Registrarse</Link>
-                </Button>
+                {!loading && user ? (
+                  <Button asChild>
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Ir al Dashboard</Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="ghost" asChild className="justify-start">
+                      <Link to="/auth">Iniciar Sesión</Link>
+                    </Button>
+                    <Button asChild>
+                      <Link to="/auth?mode=register">Registrarse</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
