@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import logoEdan from "@/assets/logo-edan.png";
+import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   const navLinks = [
     { label: "Inicio", href: "#hero" },
@@ -47,12 +49,20 @@ export function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-4">
-            <Button variant="ghost" asChild>
-              <Link to="/auth">Iniciar Sesión</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/auth?mode=register">Registrarse</Link>
-            </Button>
+            {!loading && user ? (
+              <Button asChild>
+                <Link to="/dashboard">Ir al Dashboard</Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/auth">Iniciar Sesión</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/auth?mode=register">Registrarse</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -80,12 +90,20 @@ export function Header() {
                 </a>
               ))}
               <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                <Button variant="ghost" asChild className="justify-start">
-                  <Link to="/auth">Iniciar Sesión</Link>
-                </Button>
-                <Button asChild>
-                  <Link to="/auth?mode=register">Registrarse</Link>
-                </Button>
+                {!loading && user ? (
+                  <Button asChild>
+                    <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Ir al Dashboard</Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="ghost" asChild className="justify-start">
+                      <Link to="/auth">Iniciar Sesión</Link>
+                    </Button>
+                    <Button asChild>
+                      <Link to="/auth?mode=register">Registrarse</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>
