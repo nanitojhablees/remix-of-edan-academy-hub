@@ -31,8 +31,8 @@ export function ProtectedRoute({
     return <Navigate to="/account-suspended" replace />;
   }
 
-  // Check membership status for payment flow (admins and instructors bypass this)
-  if (requireActiveMembership && profile?.membership_status !== "active" && role !== "admin" && role !== "instructor") {
+  // Membership payment gate only applies to students
+  if (requireActiveMembership && role === "estudiante" && profile?.membership_status !== "active") {
     return <Navigate to="/payment" replace />;
   }
 
