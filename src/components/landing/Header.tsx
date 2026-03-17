@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   const navLinks = [
     { label: "Inicio", href: "#hero" },
