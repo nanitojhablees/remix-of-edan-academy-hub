@@ -32,6 +32,7 @@ import InstructorStudents from "./instructor/InstructorStudents";
 import InstructorCourseEditor from "./instructor/InstructorCourseEditor";
 import InstructorExams from "./instructor/InstructorExams";
 import InstructorExamEditor from "./instructor/InstructorExamEditor";
+import InstructorAssignments from "./instructor/InstructorAssignments";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudentPreview } from "@/hooks/useStudentPreview";
 import { PageTransition } from "@/components/PageTransition";
@@ -103,6 +104,11 @@ function DashboardRoutes() {
       <Route path="instructor-exams" element={
         <RoleRoute allowedRoles={["instructor", "admin"]}>
           <InstructorExams />
+        </RoleRoute>
+      } />
+      <Route path="instructor-assignments" element={
+        <RoleRoute allowedRoles={["instructor", "admin"]}>
+          <InstructorAssignments />
         </RoleRoute>
       } />
       <Route path="course-editor/:courseId" element={

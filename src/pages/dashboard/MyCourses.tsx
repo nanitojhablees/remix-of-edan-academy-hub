@@ -8,11 +8,20 @@ import { useNavigate } from "react-router-dom";
 import { CourseListSkeleton } from "@/components/skeletons/CourseCardSkeleton";
 import { PageHeaderSkeleton } from "@/components/skeletons/PageHeaderSkeleton";
 
+const levelColors: Record<string, string> = {
+  básico: "bg-primary",
+  intermedio: "bg-secondary",
+  avanzado: "bg-accent",
+  experto: "bg-edan-orange",
+  único: "bg-slate-800",
+};
+
 const levelNames: Record<string, string> = {
   básico: "Básico",
   intermedio: "Intermedio",
   avanzado: "Avanzado",
   experto: "Experto",
+  único: "Único / Especial",
 };
 
 export default function MyCourses() {
@@ -38,55 +47,71 @@ export default function MyCourses() {
       </div>
 
       {enrollments && enrollments.length > 0 ? (
-        <div className="space-y-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {enrollments.map((enrollment) => (
-            <Card key={enrollment.id} className="hover:shadow-md transition-shadow">
-              <CardHeader className="flex flex-row items-start gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge variant="outline">
-                      {levelNames[enrollment.course?.level || '']}
+            <Card key={enrollment.id} className="hover:shadow-lg transition-all hover:-translate-y-1 flex flex-col overflow-hidden">
+              {enrollment.course?.image_url ? (
+                <div className="relative aspect-video w-full overflow-hidden bg-muted">
+                  <img
+                    src={enrollment.course.image_url}
+                    alt={enrollment.course?.title}
+                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+                  />
+                  <div className={`absolute bottom-0 left-0 right-0 h-1.5 ${levelColors[enrollment.course?.level || ''] || "bg-primary"}`} />
+                </div>
+              ) : (
+                <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
+                  <BookOpen className="h-16 w-16 text-slate-300 dark:text-slate-700" />
+                  <div className={`absolute bottom-0 left-0 right-0 h-1.5 ${levelColors[enrollment.course?.level || ''] || "bg-primary"}`} />
+                </div>
+              )}
+              
+              <div className="flex-1 flex flex-col p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Badge variant="outline">
+                    {levelNames[enrollment.course?.level || '']}
+                  </Badge>
+                  {enrollment.completed_at && (
+                    <Badge variant="secondary" className="bg-accent text-accent-foreground">
+                      Completado
                     </Badge>
-                    {enrollment.completed_at && (
-                      <Badge variant="secondary" className="bg-accent text-accent-foreground">
-                        Completado
-                      </Badge>
-                    )}
-                  </div>
-                  <CardTitle className="text-xl">{enrollment.course?.title}</CardTitle>
-                  <CardDescription className="mt-2">
-                    {enrollment.course?.description}
-                  </CardDescription>
+                  )}
                 </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
-                  <div className="flex items-center gap-1">
-                    <Clock className="h-4 w-4" />
-                    <span>{enrollment.course?.duration_hours}h duración</span>
+                <h3 className="text-xl font-semibold leading-none tracking-tight mb-2">
+                  {enrollment.course?.title}
+                </h3>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                  {enrollment.course?.description}
+                </p>
+                <div className="mt-auto pt-4 border-t">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-4 w-4" />
+                      <span>{enrollment.course?.duration_hours}h</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <BookOpen className="h-4 w-4" />
+                      <span>Inscrito: {new Date(enrollment.enrolled_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <BookOpen className="h-4 w-4" />
-                    <span>Inscrito: {new Date(enrollment.enrolled_at).toLocaleDateString()}</span>
+                  
+                  <div className="mb-4">
+                    <div className="flex justify-between text-sm mb-2">
+                      <span>Progreso</span>
+                      <span className="font-medium">{enrollment.progress_percent}%</span>
+                    </div>
+                    <Progress value={enrollment.progress_percent} className="h-2" />
                   </div>
-                </div>
-                
-                <div className="mb-4">
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Progreso</span>
-                    <span className="font-medium">{enrollment.progress_percent}%</span>
-                  </div>
-                  <Progress value={enrollment.progress_percent} className="h-2" />
-                </div>
 
-                <Button 
-                  className="w-full sm:w-auto"
-                  onClick={() => navigate(`/dashboard/course/${enrollment.course_id}`)}
-                >
-                  {enrollment.progress_percent === 0 ? "Comenzar" : "Continuar"}
-                  <ArrowRight className="h-4 w-4 ml-2" />
-                </Button>
-              </CardContent>
+                  <Button 
+                    className="w-full mt-2"
+                    onClick={() => navigate(`/dashboard/course/${enrollment.course_id}`)}
+                  >
+                    {enrollment.progress_percent === 0 ? "Comenzar Curso" : "Continuar Lección"}
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
             </Card>
           ))}
         </div>

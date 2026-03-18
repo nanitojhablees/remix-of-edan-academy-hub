@@ -135,11 +135,26 @@ export const useAddComment = () => {
         .single();
 
       if (error) throw error;
+
+      // Gamification: Award points for participating in the forum
+      // Instructors and admins generally shouldn't get points for this, but letting it pass is fine or we can exclude them.
+      if (role === 'estudiante') {
+        const { error: pointsError } = await supabase.rpc('add_user_points', {
+          _user_id: user.id,
+          _points: 5, // 5 points per comment
+          _reason: 'Participación en Foro de Comunidad',
+          _reference_type: 'comment',
+          _reference_id: data.id
+        });
+        if (pointsError) console.error('Error awarding points:', pointsError);
+      }
+
       return data;
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lesson-comments', variables.lessonId] });
-      toast.success('Comentario publicado');
+      queryClient.invalidateQueries({ queryKey: ["user-points"] });
+      toast.success('Comentario publicado (+5 Pts)');
     },
     onError: (error: Error) => {
       toast.error(error.message || 'Error al publicar comentario');

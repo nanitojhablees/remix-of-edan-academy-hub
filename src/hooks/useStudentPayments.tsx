@@ -33,6 +33,7 @@ export interface UserSubscription {
     price: number;
     currency: string;
     duration_months: number;
+    level: string | null;
   };
 }
 
@@ -68,7 +69,7 @@ export function useUserPayments() {
         .select(`
           id, amount, currency, status, payment_method, 
           transaction_id, promo_code, notes, created_at,
-          plan:payment_plans(id, name, duration_months)
+          plan:payment_plans(id, name, duration_months, level)
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -93,7 +94,7 @@ export function useUserSubscriptions() {
         .from("subscriptions")
         .select(`
           id, status, starts_at, expires_at, auto_renew,
-          plan:payment_plans(id, name, price, currency, duration_months)
+          plan:payment_plans(id, name, price, currency, duration_months, level)
         `)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -118,7 +119,7 @@ export function useActiveSubscription() {
         .from("subscriptions")
         .select(`
           id, status, starts_at, expires_at, auto_renew,
-          plan:payment_plans(id, name, price, currency, duration_months)
+          plan:payment_plans(id, name, price, currency, duration_months, level)
         `)
         .eq("user_id", user.id)
         .eq("status", "active")

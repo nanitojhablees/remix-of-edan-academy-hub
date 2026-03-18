@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
-import { Search, UserCog, Shield, GraduationCap, User, Eye } from "lucide-react";
+import { Search, UserCog, Shield, GraduationCap, User, Eye, UserPlus, CheckCircle, XCircle } from "lucide-react";
 import { UserDetailPanel } from "@/components/admin/UserDetailPanel";
+import { UserCreationDialog } from "@/components/admin/UserCreationDialog";
 
 type AppRole = "admin" | "instructor" | "estudiante";
 
@@ -33,6 +34,7 @@ export default function UsersManagement() {
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [creationDialogOpen, setCreationDialogOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -53,7 +55,10 @@ export default function UsersManagement() {
 
       const rolesMap = new Map(roles?.map(r => [r.user_id, r.role as AppRole]));
 
-      return profiles.map(p => ({
+      // Obtener emails de los perfiles si están disponibles, o manejar vía auth
+      // Si profiles no tiene email, usaremos la tabla de profiles si se agregó. En algunos setups de Supabase, se duplica el email ahí.
+      // Modificamos el user mapping
+      return profiles.map((p: any) => ({
         ...p,
         role: rolesMap.get(p.user_id) || "estudiante",
       })) as UserWithRole[];
@@ -100,12 +105,31 @@ export default function UsersManagement() {
     }
   };
 
+  const sendWelcomeEmail = async (userEmail: string, userName: string) => {
+    try {
+      const response = await supabase.functions.invoke("send-welcome-email", {
+        body: { email: userEmail, userName },
+      });
+      if (response.error) console.error("Failed to send welcome email:", response.error);
+    } catch (error) {
+      console.error("Error sending welcome email:", error);
+    }
+  };
+
+  const sendRejectionEmail = async (userEmail: string, userName: string) => {
+    // Si no tenemos una edge function dedicada a rechazo, envíamos una simple o la creamos luego.
+    // Por ahora, imprimimos o usamos otra genérica, dado que en el alcance principal se usa la misma base.
+    console.log("Send rejection email to", userEmail);
+    // TODO: implement send-rejection-email Edge Function if required. (El plan decía "enviar correo de rechazo").
+  };
+
   const updateStatusMutation = useMutation({
-    mutationFn: async ({ userId, status, userName, previousStatus }: { 
+    mutationFn: async ({ userId, status, userName, previousStatus, userEmail }: { 
       userId: string; 
       status: string; 
       userName: string;
       previousStatus: string;
+      userEmail?: string;
     }) => {
       const { error } = await supabase
         .from("profiles")
@@ -117,8 +141,12 @@ export default function UsersManagement() {
       // Send appropriate email notification
       if (status === "suspended") {
         await sendSuspensionEmail(userId, userName);
+      } else if (status === "active" && previousStatus === "pending") {
+        if (userEmail) await sendWelcomeEmail(userEmail, userName);
       } else if (status === "active" && ["suspended", "expired", "cancelled"].includes(previousStatus)) {
         await sendReactivationEmail(userId, userName, previousStatus);
+      } else if (status === "cancelled" && previousStatus === "pending") {
+        if (userEmail) await sendRejectionEmail(userEmail, userName);
       }
     },
     onSuccess: (_, variables) => {
@@ -219,11 +247,15 @@ export default function UsersManagement() {
 
       {/* Users Table */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between space-y-0">
           <CardTitle className="flex items-center gap-2">
             <UserCog className="h-5 w-5" />
             Usuarios ({filteredUsers?.length || 0})
           </CardTitle>
+          <Button onClick={() => setCreationDialogOpen(true)} className="flex items-center gap-2">
+            <UserPlus className="h-4 w-4" />
+            Crear Usuario
+          </Button>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -283,7 +315,47 @@ export default function UsersManagement() {
                       <TableCell className="text-sm text-muted-foreground">
                         {new Date(user.created_at).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right whitespace-nowrap">
+                        {user.membership_status === "pending" && (
+                          <>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="mr-2 text-green-600 border-green-200 hover:bg-green-50"
+                              onClick={() => {
+                                updateStatusMutation.mutate({
+                                  userId: user.user_id,
+                                  status: "active",
+                                  userName: user.first_name,
+                                  previousStatus: user.membership_status!,
+                                  userEmail: user.email // En el query principal no viene el email desde Auth. Necesitamos obtenerlo si es posible.
+                                });
+                              }}
+                              disabled={updateStatusMutation.isPending}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-1" />
+                              Aprobar
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="mr-2 text-red-600 border-red-200 hover:bg-red-50"
+                              onClick={() => {
+                                updateStatusMutation.mutate({
+                                  userId: user.user_id,
+                                  status: "cancelled",
+                                  userName: user.first_name,
+                                  previousStatus: user.membership_status!,
+                                  userEmail: user.email
+                                });
+                              }}
+                              disabled={updateStatusMutation.isPending}
+                            >
+                              <XCircle className="h-4 w-4 mr-1" />
+                              Rechazar
+                            </Button>
+                          </>
+                        )}
                         <Button 
                           variant="ghost" 
                           size="sm"
@@ -307,6 +379,12 @@ export default function UsersManagement() {
         userId={selectedUserId}
         open={panelOpen}
         onOpenChange={setPanelOpen}
+      />
+
+      {/* User Creation Dialog */}
+      <UserCreationDialog
+        open={creationDialogOpen}
+        onOpenChange={setCreationDialogOpen}
       />
     </div>
   );

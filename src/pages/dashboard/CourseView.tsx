@@ -1,9 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { useCourse, useCourseModules, useEnrollment, useMarkLessonComplete } from "@/hooks/useCourses";
+import { useCourse, useCourseModules, useEnrollment, useMarkLessonComplete, useEnrollInCourse } from "@/hooks/useCourses";
 import { useCourseCertificate, useIssueCertificate } from "@/hooks/useCertificates";
 import { supabase } from "@/integrations/supabase/client";
 import { useCourseExams } from "@/hooks/useExams";
 import { useEnrollmentRequest } from "@/hooks/useEnrollmentRequests";
+import { useActiveSubscription } from "@/hooks/useStudentPayments";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -19,6 +20,8 @@ import { LessonDiscussion } from "@/components/comments/LessonDiscussion";
 import { ContentPlayer } from "@/components/content/ContentPlayer";
 import { useStudentPreview } from "@/hooks/useStudentPreview";
 import { EnrollmentModal } from "@/components/enrollment/EnrollmentModal";
+import { hasVipAccess } from "@/utils/courseAccess";
+import { StudentAssignmentView } from "@/components/assignments/StudentAssignmentView";
 
 export default function CourseView() {
   const { courseId } = useParams();
@@ -31,22 +34,26 @@ export default function CourseView() {
   const { data: certificate } = useCourseCertificate(courseId);
   const { data: courseExams } = useCourseExams(courseId);
   const { data: enrollmentRequest } = useEnrollmentRequest(courseId);
+  const { data: activeSubscription } = useActiveSubscription();
   const markLessonComplete = useMarkLessonComplete();
   const issueCertificate = useIssueCertificate();
+  const enrollInCourse = useEnrollInCourse();
   const { toast } = useToast();
   const [selectedLesson, setSelectedLesson] = useState<string | null>(null);
   const [lessonsMap, setLessonsMap] = useState<Record<string, any[]>>({});
   const [completedLessons, setCompletedLessons] = useState<Set<string>>(new Set());
   const [loadingCompletion, setLoadingCompletion] = useState(false);
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   // In student preview: simulate a student WITH active enrollment (full content access, no edit controls)
   // Normal: admin/instructor always have access
   const isPrivileged = (role === "admin" || role === "instructor") && !isStudentPreview;
   const canAccessContent = enrollment || isPrivileged || isStudentPreview;
 
-  // Course is free if price is 0 or null
+  // Validate Access Rules
   const isFree = !course?.price || course.price <= 0;
+  const hasVip = activeSubscription && course ? hasVipAccess(course.level, activeSubscription.plan?.level) : false;
 
   // Load lessons for all modules
   useEffect(() => {
@@ -166,6 +173,18 @@ export default function CourseView() {
       </div>
     );
   }
+
+  const handleEnroll = async () => {
+    if (!courseId) return;
+    setEnrolling(true);
+    try {
+      await enrollInCourse.mutateAsync(courseId);
+    } catch (e) {
+      // error handled in mutation
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   const currentLessonData = selectedLesson 
     ? Object.values(lessonsMap).flat().find(l => l.id === selectedLesson)
@@ -287,10 +306,22 @@ export default function CourseView() {
                       <Clock className="h-4 w-4" />
                       Solicitud pendiente de aprobación
                     </Button>
+                  ) : (isFree || hasVip) ? (
+                    <Button 
+                      className="w-full gap-2 bg-primary text-primary-foreground hover:bg-primary/90" 
+                      onClick={handleEnroll}
+                      disabled={enrolling}
+                    >
+                      {enrolling ? (
+                        <span className="flex items-center gap-2"><span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> Inscribiendo...</span>
+                      ) : (
+                        <><ShoppingCart className="h-4 w-4" /> {hasVip && !isFree ? "Acceso VIP - Entrar gratis" : "Inscribirse gratis"}</>
+                      )}
+                    </Button>
                   ) : (
                     <Button className="w-full gap-2" onClick={() => setEnrollModalOpen(true)}>
                       <ShoppingCart className="h-4 w-4" />
-                      {isFree ? "Inscribirse gratis" : `Inscribirse — $${course.price}`}
+                      Inscribirse — ${course.price}
                     </Button>
                   )}
                 </div>
@@ -355,6 +386,9 @@ export default function CourseView() {
                         <p className="text-muted-foreground">Contenido de la lección próximamente.</p>
                       )}
                     </div>
+
+                    <StudentAssignmentView lessonId={currentLessonData.id} />
+
                     <div className="flex justify-end mt-6">
                       {!completedLessons.has(currentLessonData.id) ? (
                         <Button className="gap-2" onClick={() => handleMarkComplete(currentLessonData.id)} disabled={loadingCompletion}>
@@ -393,10 +427,22 @@ export default function CourseView() {
                     <Clock className="h-3 w-3" />
                     Tu solicitud está siendo revisada
                   </Badge>
+                ) : (isFree || hasVip) ? (
+                  <Button 
+                    className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90" 
+                    onClick={handleEnroll}
+                    disabled={enrolling}
+                  >
+                    {enrolling ? (
+                      <span className="flex items-center gap-2"><span className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full" /> Inscribiendo...</span>
+                    ) : (
+                      <><ShoppingCart className="h-4 w-4" /> {hasVip && !isFree ? "Acceso VIP - Entrar gratis" : "Inscribirse gratis"}</>
+                    )}
+                  </Button>
                 ) : (
                   <Button onClick={() => setEnrollModalOpen(true)} className="gap-2">
                     <ShoppingCart className="h-4 w-4" />
-                    {isFree ? "Inscribirse gratis" : `Inscribirse — $${course.price}`}
+                    Inscribirse — ${course.price}
                   </Button>
                 )}
               </CardContent>

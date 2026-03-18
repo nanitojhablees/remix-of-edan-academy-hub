@@ -607,12 +607,12 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
   const openEdit = (plan: PaymentPlan) => {
     setEditingPlan(plan);
     setFormData({
-      name: plan.name,
+      name: plan.name || "",
       description: plan.description || "",
-      price: plan.price.toString(),
-      duration_months: plan.duration_months.toString(),
+      price: plan.price != null ? plan.price.toString() : "",
+      duration_months: plan.duration_months != null ? plan.duration_months.toString() : "1",
       level: plan.level || "",
-      is_active: plan.is_active,
+      is_active: plan.is_active ?? true,
     });
     setDialogOpen(true);
   };
@@ -628,7 +628,7 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
       name: formData.name,
       description: formData.description,
       price: parseFloat(formData.price),
-      duration_months: parseInt(formData.duration_months),
+      duration_months: parseInt(formData.duration_months) || 1,
       level: formData.level || null,
       is_active: formData.is_active,
     };
@@ -649,7 +649,7 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
       </CardHeader>
       <CardContent>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {plans.map((plan) => (
+          {plans?.map((plan) => (
             <Card key={plan.id} className={!plan.is_active ? "opacity-50" : ""}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -659,7 +659,7 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
                   </Button>
                 </div>
                 <div className="text-2xl font-bold text-primary">
-                  ${Number(plan.price).toFixed(2)}
+                  ${Number(plan.price || 0).toFixed(2)}
                   <span className="text-sm font-normal text-muted-foreground">
                     /{plan.duration_months} mes{plan.duration_months > 1 ? "es" : ""}
                   </span>
@@ -674,6 +674,11 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
               </CardContent>
             </Card>
           ))}
+          {(!plans || plans.length === 0) && (
+            <div className="col-span-full text-center py-8 text-muted-foreground">
+              No hay planes de pago configurados.
+            </div>
+          )}
         </div>
 
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -702,6 +707,7 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
                   <Input
                     type="number"
                     step="0.01"
+                    min="0"
                     value={formData.price}
                     onChange={(e) => setFormData(f => ({ ...f, price: e.target.value }))}
                   />
@@ -710,6 +716,7 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
                   <Label>Duración (meses)</Label>
                   <Input
                     type="number"
+                    min="1"
                     value={formData.duration_months}
                     onChange={(e) => setFormData(f => ({ ...f, duration_months: e.target.value }))}
                   />
@@ -717,14 +724,15 @@ function PlansTab({ plans }: { plans: PaymentPlan[] }) {
               </div>
               <div>
                 <Label>Nivel (opcional)</Label>
-                <Select value={formData.level} onValueChange={(v) => setFormData(f => ({ ...f, level: v }))}>
+                <Select value={formData.level} onValueChange={(v) => setFormData(f => ({ ...f, level: v === "none" ? "" : v }))}>
                   <SelectTrigger><SelectValue placeholder="Acceso completo" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Acceso completo</SelectItem>
+                    <SelectItem value="none">Acceso completo</SelectItem>
                     <SelectItem value="básico">Básico</SelectItem>
                     <SelectItem value="intermedio">Intermedio</SelectItem>
                     <SelectItem value="avanzado">Avanzado</SelectItem>
                     <SelectItem value="experto">Experto</SelectItem>
+                    <SelectItem value="único">Único / Curso Específico</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

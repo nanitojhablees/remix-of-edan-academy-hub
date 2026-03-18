@@ -29,29 +29,94 @@ export function ImageUploader({
   const [mode, setMode] = useState<'upload' | 'url'>(value && !value.includes(bucket) ? 'url' : 'upload');
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      // Si el archivo ya es muy pequeño o no es imagen, pasarlo directamente
+      if (!file.type.startsWith('image/')) {
+        resolve(file);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          // Redimensionar si es muy grande (max 1280px width)
+          const MAX_WIDTH = 1280;
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          
+          if (!ctx) {
+            resolve(file); // fail-safe fallback
+            return;
+          }
+          
+          // Fondo blanco para imágenes transparentes que pasan a WebP
+          ctx.fillStyle = "#FFFFFF";
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                // Crear un nuevo File objeto de tipo WebP
+                const newFile = new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
+                  type: 'image/webp',
+                  lastModified: Date.now(),
+                });
+                resolve(newFile);
+              } else {
+                resolve(file);
+              }
+            },
+            'image/webp',
+            0.8 // 80% compression quality
+          );
+        };
+        img.onerror = () => resolve(file);
+        img.src = event.target?.result as string;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('La imagen no puede superar 5MB');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('La imagen original no puede superar 10MB');
       return;
     }
 
     setIsUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.${ext}`;
+      toast.info('Optimizando imagen...');
+      const compressedFile = await compressImage(file);
+      
+      const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
 
+      toast.info('Subiendo imagen optimizada...');
       const { data, error } = await supabase.storage
         .from(bucket)
-        .upload(fileName, file, { cacheControl: '3600', upsert: false });
+        .upload(fileName, compressedFile, { cacheControl: '3600', upsert: false });
 
       if (error) throw error;
 
       const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(data.path);
       onChange(urlData.publicUrl);
-      toast.success('Imagen subida correctamente');
+      toast.success('Imagen optimizada y subida correctamente');
     } catch (error: any) {
       console.error('Upload error:', error);
       toast.error(error.message || 'Error al subir la imagen');

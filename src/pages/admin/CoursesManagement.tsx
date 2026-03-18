@@ -196,6 +196,7 @@ export default function CoursesManagement() {
                       <SelectItem value="intermedio">Intermedio</SelectItem>
                       <SelectItem value="avanzado">Avanzado</SelectItem>
                       <SelectItem value="experto">Experto</SelectItem>
+                      <SelectItem value="único">Único / Especial</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

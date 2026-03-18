@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Label } from "@/components/ui/label";
 import { ImageUploader } from "@/components/editor/ImageUploader";
 import { ModuleMaterialsEditor } from "@/components/materials/ModuleMaterials";
+import { LessonAssignments } from "@/components/assignments/LessonAssignments";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -258,9 +259,10 @@ function LessonEditor({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="content">Contenido</TabsTrigger>
           <TabsTrigger value="preview">Vista Previa</TabsTrigger>
+          <TabsTrigger value="assignments">Tareas</TabsTrigger>
         </TabsList>
         <TabsContent value="content" className="mt-4">
           <RichTextEditor
@@ -285,6 +287,16 @@ function LessonEditor({
               dangerouslySetInnerHTML={{ __html: content || "<p class='text-muted-foreground'>Sin contenido aún...</p>" }}
             />
           </div>
+        </TabsContent>
+        <TabsContent value="assignments" className="mt-4 border rounded-lg p-6 min-h-[400px]">
+          {lesson ? (
+            <LessonAssignments lessonId={lesson.id} />
+          ) : (
+             <div className="text-center py-12 text-muted-foreground flex flex-col items-center">
+               <FileText className="h-12 w-12 mb-4 opacity-50" />
+               <p>Guarda esta lección por primera vez para poder adjuntarle tareas.</p>
+             </div>
+          )}
         </TabsContent>
       </Tabs>
 
