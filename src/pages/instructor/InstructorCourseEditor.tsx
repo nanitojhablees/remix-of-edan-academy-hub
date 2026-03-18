@@ -596,9 +596,9 @@ export default function InstructorCourseEditor() {
         </div>
       </div>
 
-      {/* ─── 5-Tab Navigation ─── */}
+      {/* ─── 6-Tab Navigation ─── */}
       <Tabs value={activeSection} onValueChange={setActiveSection} className="w-full">
-        <TabsList className="grid w-full grid-cols-6 mb-6 h-auto">
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-6 mb-6 h-auto gap-1">
           <TabsTrigger value="basico" className="flex flex-col sm:flex-row gap-1 sm:gap-2 items-center py-2.5 text-xs sm:text-sm">
             <GraduationCap className="h-4 w-4" />
             <span>Básico</span>
