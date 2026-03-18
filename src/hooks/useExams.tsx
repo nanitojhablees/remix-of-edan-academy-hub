@@ -224,26 +224,59 @@ export const useInstructorExams = (courseId?: string) => {
     queryFn: async () => {
       if (!user) return [];
       
-      let query = supabase.from('exams').select('*, courses(title, instructor_id)');
-      
-      // Admin sees all exams, instructor sees only their own
-      if (role !== 'admin') {
-        query = query.eq('courses.instructor_id', user.id);
+      // For admin: get all exams (optionally filtered by course)
+      if (role === 'admin') {
+        let query = supabase
+          .from('exams')
+          .select('*, courses(title, instructor_id)');
+        if (courseId) query = query.eq('course_id', courseId);
+        const { data, error } = await query.order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
       }
       
+      // For instructor: first get their course IDs, then fetch exams
       if (courseId) {
-        query = query.eq('course_id', courseId);
+        // Verify this course belongs to the instructor
+        const { data: course } = await supabase
+          .from('courses')
+          .select('id')
+          .eq('id', courseId)
+          .eq('instructor_id', user.id)
+          .single();
+        if (!course) return [];
+        
+        const { data, error } = await supabase
+          .from('exams')
+          .select('*, courses(title, instructor_id)')
+          .eq('course_id', courseId)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return data || [];
       }
       
-      const { data, error } = await query.order('created_at', { ascending: false });
+      // No courseId: get all courses by this instructor, then their exams
+      const { data: courses } = await supabase
+        .from('courses')
+        .select('id')
+        .eq('instructor_id', user.id);
+      
+      if (!courses || courses.length === 0) return [];
+      
+      const courseIds = courses.map(c => c.id);
+      const { data, error } = await supabase
+        .from('exams')
+        .select('*, courses(title, instructor_id)')
+        .in('course_id', courseIds)
+        .order('created_at', { ascending: false });
       
       if (error) throw error;
-      // Filter out entries where courses is null (for non-admin, the inner filter makes them null)
-      return (data || []).filter((e: any) => e.courses !== null);
+      return data || [];
     },
     enabled: !!user,
   });
 };
+
 
 // Get exam with all questions and correct answers (for instructor)
 export const useInstructorExamDetails = (examId: string | undefined) => {

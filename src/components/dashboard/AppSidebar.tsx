@@ -1,4 +1,4 @@
-import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell, CreditCard, Receipt, Search, Compass, ClipboardList } from "lucide-react";
+import { Home, BookOpen, GraduationCap, Users, Settings, LogOut, BarChart3, UserCog, Trophy, Medal, Award, FileQuestion, Bell, CreditCard, Receipt, Search, Compass, ClipboardList, MessageSquare } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useStudentPreview } from "@/hooks/useStudentPreview";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -56,6 +56,7 @@ const adminMenu = [
   { title: "Exámenes", url: "/dashboard/admin-exams", icon: FileQuestion },
   { title: "Certificados", url: "/dashboard/admin-certificates", icon: Award },
   { title: "Insignias", url: "/dashboard/admin-badges", icon: Medal },
+  { title: "Foros e Hilos", url: "/dashboard/admin-forums", icon: MessageSquare },
   { title: "Notificaciones", url: "/dashboard/admin-notifications", icon: Bell },
   { title: "Analytics", url: "/dashboard/admin-analytics", icon: Trophy },
   { title: "Configuración", url: "/dashboard/admin-settings", icon: Settings },

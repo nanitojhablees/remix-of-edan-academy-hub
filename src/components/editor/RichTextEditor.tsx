@@ -114,7 +114,7 @@ export function RichTextEditor({
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none min-h-[200px] p-4 focus:outline-none',
+        class: 'min-h-[200px] p-4 focus:outline-none',
       },
     },
   });
@@ -509,7 +509,7 @@ export function RichTextViewer({ content }: { content: string }) {
     editable: false,
     editorProps: {
       attributes: {
-        class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none',
+        class: 'focus:outline-none',
       },
     },
   });

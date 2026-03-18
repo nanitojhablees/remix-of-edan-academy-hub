@@ -30,7 +30,14 @@ export default function ExamView() {
   const [timeLeft, setTimeLeft] = useState<number | null>(null);
   const [examStarted, setExamStarted] = useState(false);
   const [examSubmitted, setExamSubmitted] = useState(false);
-  
+  const [submittedResult, setSubmittedResult] = useState<{
+    score: number;
+    passed: boolean;
+    completed_at: string;
+  } | null>(null);
+  // Use a ref so the timer closure always has the latest handleSubmit
+  const submitRef = { current: null as (() => void) | null };
+
   // Timer effect
   useEffect(() => {
     if (!examStarted || timeLeft === null || timeLeft <= 0 || examSubmitted) return;
@@ -39,7 +46,8 @@ export default function ExamView() {
       setTimeLeft(prev => {
         if (prev === null || prev <= 1) {
           clearInterval(timer);
-          handleSubmit();
+          // Call via ref to avoid stale closure
+          if (submitRef.current) submitRef.current();
           return 0;
         }
         return prev - 1;
@@ -103,11 +111,17 @@ export default function ExamView() {
         selected_option_id
       }));
       
-      await submitExam.mutateAsync({
+      const result = await submitExam.mutateAsync({
         attemptId: currentAttempt,
         answers: formattedAnswers
       });
       
+      // Save result directly from mutation response — don't rely on stale cache
+      setSubmittedResult({
+        score: result?.score ?? 0,
+        passed: result?.passed ?? false,
+        completed_at: result?.completed_at ?? new Date().toISOString(),
+      });
       setExamSubmitted(true);
       toast({
         title: "Examen enviado",
@@ -122,6 +136,8 @@ export default function ExamView() {
       });
     }
   };
+  // Keep ref in sync
+  submitRef.current = handleSubmit;
   
   if (loadingExam || loadingQuestions || loadingAttempts) {
     return (
@@ -145,9 +161,14 @@ export default function ExamView() {
   const attemptsLeft = exam.max_attempts - completedAttempts.length;
   const hasPassed = passedAttempts.length > 0;
   const latestAttempt = completedAttempts[0];
-  
-  // Show results after submission
-  if (examSubmitted && latestAttempt) {
+    // Show results after submission - use immediate mutation result
+  if (examSubmitted && submittedResult) {
+    const passed = submittedResult.passed;
+    const score = submittedResult.score;
+    const completedAttempts = attempts?.filter(a => a.completed_at) || [];
+    const attemptsUsed = completedAttempts.length + 1; // +1 for current
+    const remainingAttempts = Math.max(0, exam.max_attempts - attemptsUsed);
+    
     return (
       <div className="max-w-2xl mx-auto">
         <Button variant="ghost" className="mb-4" onClick={() => navigate(-1)}>
@@ -155,22 +176,22 @@ export default function ExamView() {
           Volver al curso
         </Button>
         
-        <Card className={latestAttempt.passed ? "border-green-500/50" : "border-red-500/50"}>
+        <Card className={passed ? "border-green-500/50" : "border-red-500/50"}>
           <CardHeader className="text-center">
             <div className={`mx-auto h-16 w-16 rounded-full flex items-center justify-center ${
-              latestAttempt.passed ? 'bg-green-500/10' : 'bg-red-500/10'
+              passed ? 'bg-green-500/10' : 'bg-red-500/10'
             }`}>
-              {latestAttempt.passed ? (
+              {passed ? (
                 <Trophy className="h-8 w-8 text-green-500" />
               ) : (
                 <XCircle className="h-8 w-8 text-red-500" />
               )}
             </div>
             <CardTitle className="text-2xl">
-              {latestAttempt.passed ? '¡Felicidades!' : 'Examen no aprobado'}
+              {passed ? '¡Felicidades!' : 'Examen no aprobado'}
             </CardTitle>
             <CardDescription>
-              {latestAttempt.passed 
+              {passed 
                 ? 'Has aprobado el examen exitosamente'
                 : `Necesitas ${exam.passing_score}% para aprobar`
               }
@@ -178,8 +199,10 @@ export default function ExamView() {
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="text-center">
-              <p className="text-5xl font-bold text-foreground mb-2">
-                {latestAttempt.score?.toFixed(1)}%
+              <p className={`text-6xl font-bold mb-2 ${
+                passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+              }`}>
+                {score.toFixed(1)}%
               </p>
               <p className="text-muted-foreground">Puntuación obtenida</p>
             </div>
@@ -190,7 +213,7 @@ export default function ExamView() {
                 <p className="text-sm text-muted-foreground">Puntuación mínima</p>
               </div>
               <div className="p-4 bg-muted rounded-lg">
-                <p className="text-2xl font-bold">{attemptsLeft}</p>
+                <p className="text-2xl font-bold">{remainingAttempts}</p>
                 <p className="text-sm text-muted-foreground">Intentos restantes</p>
               </div>
             </div>
@@ -199,11 +222,14 @@ export default function ExamView() {
             <Button className="flex-1" onClick={() => navigate(-1)}>
               Volver al curso
             </Button>
-            {!latestAttempt.passed && attemptsLeft > 0 && (
+            {!passed && remainingAttempts > 0 && (
               <Button variant="outline" className="flex-1" onClick={() => {
                 setExamSubmitted(false);
+                setSubmittedResult(null);
                 setExamStarted(false);
                 setCurrentAttempt(null);
+                setAnswers({});
+                setCurrentQuestion(0);
               }}>
                 Intentar de nuevo
               </Button>
@@ -213,6 +239,7 @@ export default function ExamView() {
       </div>
     );
   }
+
   
   // Show exam in progress
   if (examStarted && shuffledQuestions && shuffledQuestions.length > 0) {

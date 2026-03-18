@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useCourse, useCourseModules, useEnrollment, useMarkLessonComplete, useEnrollInCourse } from "@/hooks/useCourses";
 import { useCourseCertificate, useIssueCertificate } from "@/hooks/useCertificates";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,10 +22,26 @@ import { useStudentPreview } from "@/hooks/useStudentPreview";
 import { EnrollmentModal } from "@/components/enrollment/EnrollmentModal";
 import { hasVipAccess } from "@/utils/courseAccess";
 import { StudentAssignmentView } from "@/components/assignments/StudentAssignmentView";
+import { CourseLiveSessions } from "@/components/live/CourseLiveSessions";
+import { LessonMicroQuizzes } from "@/components/quizzes/LessonMicroQuizzes";
+import { CourseForumView } from "@/components/forum/CourseForumView";
 
 export default function CourseView() {
   const { courseId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'content';
+
+  const handleTabChange = (value: string) => {
+    if (value === 'content') {
+      searchParams.delete('tab');
+      setSearchParams(searchParams);
+    } else {
+      searchParams.set('tab', value);
+      setSearchParams(searchParams);
+    }
+  };
+
   const { user, role } = useAuth();
   const { isStudentPreview } = useStudentPreview();
   const { data: course, isLoading: loadingCourse } = useCourse(courseId);
@@ -349,7 +365,22 @@ export default function CourseView() {
             </Card>
           )}
 
-          {currentLessonData && canAccessContent ? (
+          <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="mb-6 w-full justify-start overflow-x-auto">
+              <TabsTrigger value="content" className="flex items-center gap-2">
+                <BookOpen className="h-4 w-4" />
+                <span className="hidden sm:inline">Contenido del Curso</span>
+              </TabsTrigger>
+              {course?.forum_enabled !== false && (
+                <TabsTrigger value="forum" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline">Comunidad y Foro</span>
+                </TabsTrigger>
+              )}
+            </TabsList>
+
+            <TabsContent value="content" className="mt-0 space-y-6">
+              {currentLessonData && canAccessContent ? (
             <Card>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -367,14 +398,14 @@ export default function CourseView() {
                 )}
 
                 <Tabs defaultValue="content" className="w-full">
-                  <TabsList className="mb-4">
-                    <TabsTrigger value="content" className="gap-2">
+                  <TabsList className="mb-4 w-full justify-start overflow-x-auto">
+                    <TabsTrigger value="content" className="flex items-center gap-2">
                       <BookOpen className="h-4 w-4" />
-                      Contenido
+                      <span className="hidden sm:inline">Contenido</span>
                     </TabsTrigger>
-                    <TabsTrigger value="discussion" className="gap-2">
-                      <MessageSquare className="h-4 w-4" />
-                      Discusión
+                    <TabsTrigger value="certificate" className="flex items-center gap-2">
+                      <Award className="h-4 w-4" />
+                      <span className="hidden sm:inline">Certificado</span>
                     </TabsTrigger>
                   </TabsList>
 
@@ -388,6 +419,10 @@ export default function CourseView() {
                     </div>
 
                     <StudentAssignmentView lessonId={currentLessonData.id} />
+
+                    <LessonMicroQuizzes lessonId={currentLessonData.id} />
+
+                    {courseId && <CourseLiveSessions courseId={courseId} />}
 
                     <div className="flex justify-end mt-6">
                       {!completedLessons.has(currentLessonData.id) ? (
@@ -456,6 +491,22 @@ export default function CourseView() {
               </CardContent>
             </Card>
           )}
+            </TabsContent>
+
+            {course?.forum_enabled !== false && (
+              <TabsContent value="forum" className="mt-0">
+                <Card>
+                  <CardContent className="p-0 sm:p-6 pt-6">
+                    <CourseForumView 
+                      courseId={course.id} 
+                      instructorId={course.instructor_id || undefined}
+                      forumEnabled={course?.forum_enabled !== false}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            )}
+          </Tabs>
         </div>
       </div>
 
