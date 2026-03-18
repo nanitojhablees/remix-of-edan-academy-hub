@@ -144,3 +144,16 @@ Plataforma LMS con:
 - `@supabase/supabase-js`: v3.4.0
 - `react-router-dom`: v6.22.1
 - `zod`: v3.22.4
+
+## Reglas de eficiencia para el agente
+
+1. NUNCA repitas código que no cambias — solo muestra las líneas modificadas
+2. Antes de escribir código, describe en 2 líneas qué vas a hacer
+3. Para cambios pequeños edita solo el archivo afectado — no releas todo el proyecto
+4. Usa @codebase solo cuando sea necesario entender contexto amplio
+5. Para cambios en BD consulta primero el MCP antes de asumir la estructura
+6. Si una tarea tiene más de 3 archivos a modificar, pide confirmación antes
+7. Mantén respuestas concisas — código limpio sin explicaciones innecesarias
+8. Siempre actualiza BITACORA.md después de cada cambio exitoso
+9. Si el modelo cambia a DeepSeek por límite de quota, continúa sin interrumpir el flujo
+10. maxTokens de respuesta: 2000 — si necesitas más divídelo en pasos
