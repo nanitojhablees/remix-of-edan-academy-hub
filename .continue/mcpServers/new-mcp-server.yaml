@@ -1,0 +1,14 @@
+name: Supabase MCP
+version: 0.0.1
+schema: v1
+
+mcpServers:
+  - name: supabase
+    command: npx
+    args:
+      - "-y"
+      - "@supabase/mcp-server-supabase@latest"
+      - "--project-ref"
+      - "qntnclsoudflabjrvyer"
+    env:
+      SUPABASE_ACCESS_TOKEN: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFudG5jbHNvdWRmbGFianJ2eWVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3ODIyMzAsImV4cCI6MjA4OTM1ODIzMH0.D0udOB3QWu5fmovF0KSZeUC-dXJCKtti1xKVcRCRRUE"
