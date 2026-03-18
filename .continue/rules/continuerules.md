@@ -1,3 +1,30 @@
+## Bitácora del proyecto
+
+Existe un archivo llamado BITACORA.md en la raíz del proyecto.
+
+### Reglas obligatorias para el agente:
+
+1. ANTES de hacer cualquier cambio, lee BITACORA.md para entender 
+   el estado actual del proyecto.
+
+2. DESPUÉS de cada cambio exitoso, actualiza BITACORA.md agregando 
+   una entrada con este formato:
+
+   ### [FECHA] - [DESCRIPCIÓN CORTA]
+   - **Qué se hizo:** descripción detallada
+   - **Archivos modificados:** lista de archivos
+   - **Tablas afectadas:** si hubo cambios en BD
+   - **Estado:** ✅ Completado / ⚠️ Parcial / ❌ Problema
+   - **Pendiente:** qué falta si quedó incompleto
+
+3. Si un cambio falla o queda incompleto, documéntalo igual 
+   con estado ⚠️ o ❌ para que el próximo agente sepa qué pasó.
+
+4. NUNCA asumas el estado del proyecto sin leer BITACORA.md primero.
+
+5. Si encuentras inconsistencias entre el código y BITACORA.md, 
+   reporta la diferencia antes de hacer cualquier cambio.
+
 # ContinueRules - EDAN Academy Hub (Actualizado)
 
 ## 🔍 Visión General Ampliada
