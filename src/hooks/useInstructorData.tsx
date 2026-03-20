@@ -255,9 +255,15 @@ export function useCreateCourse() {
 export function useUpdateCourse() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { role } = useAuth();
 
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Course> & { id: string }) => {
+      // Prevent instructors from updating price - only admins can change price
+      if (role === "instructor" && updates.price !== undefined) {
+        throw new Error("Los instructores no tienen permiso para actualizar el precio del curso");
+      }
+
       const { error } = await supabase
         .from("courses")
         .update(updates)
@@ -270,7 +276,7 @@ export function useUpdateCourse() {
       queryClient.invalidateQueries({ queryKey: ["course"] });
       toast({ title: "Curso actualizado" });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });

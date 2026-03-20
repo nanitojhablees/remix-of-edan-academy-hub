@@ -881,19 +881,21 @@ export default function InstructorCourseEditor() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cfg-price">Precio (USD)</Label>
-                  <Input
-                    id="cfg-price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={coursePrice}
-                    onChange={e => setCoursePrice(parseFloat(e.target.value) || 0)}
-                    placeholder="0 = Gratis"
-                  />
-                  <p className="text-xs text-muted-foreground">Escribe 0 para hacer el curso gratuito</p>
-                </div>
+                {role === "admin" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="cfg-price">Precio (USD)</Label>
+                    <Input
+                      id="cfg-price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={coursePrice}
+                      onChange={e => setCoursePrice(parseFloat(e.target.value) || 0)}
+                      placeholder="0 = Gratis"
+                    />
+                    <p className="text-xs text-muted-foreground">Escribe 0 para hacer el curso gratuito</p>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="cfg-duration">Duración estimada (horas)</Label>
                   <Input
