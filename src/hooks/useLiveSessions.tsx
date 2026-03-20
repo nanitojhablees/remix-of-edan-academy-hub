@@ -12,6 +12,19 @@ export interface LiveSession {
   created_at: string;
 }
 
+export interface LiveSessionMessage {
+  id: string;
+  room_id: string;
+  user_id: string;
+  message: string;
+  created_at: string;
+  profile?: {
+    first_name: string;
+    last_name: string;
+    avatar_url: string | null;
+  };
+}
+
 export function useModuleLiveSessions(moduleId: string | undefined) {
   return useQuery({
     queryKey: ["live-sessions", moduleId],

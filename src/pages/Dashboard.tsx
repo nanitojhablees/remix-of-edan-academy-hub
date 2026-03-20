@@ -2,6 +2,12 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { StudentPreviewProvider } from "@/hooks/useStudentPreview";
+import { useAuth } from "@/hooks/useAuth";
+import { useStudentPreview } from "@/hooks/useStudentPreview";
+import { PageTransition } from "@/components/PageTransition";
+import { StudentPreviewBanner } from "@/components/dashboard/StudentPreviewBanner";
+
+// Import dashboard components directly (no lazy loading)
 import DashboardHome from "./dashboard/DashboardHome";
 import MyCourses from "./dashboard/MyCourses";
 import CourseCatalog from "./dashboard/CourseCatalog";
@@ -13,13 +19,16 @@ import Certificates from "./dashboard/Certificates";
 import PaymentHistory from "./dashboard/PaymentHistory";
 import RenewMembership from "./dashboard/RenewMembership";
 import ExamView from "./dashboard/ExamView";
+import LiveSessionPage from "./dashboard/LiveSessionPage";
+
+// Import admin components directly (no lazy loading)
 import AdminDashboard from "./admin/AdminDashboard";
 import UsersManagement from "./admin/UsersManagement";
 import CoursesManagement from "./admin/CoursesManagement";
 import AdminSettings from "./admin/AdminSettings";
 import AdvancedAnalytics from "./admin/AdvancedAnalytics";
 import ExamsManagement from "./admin/ExamsManagement";
-import CertificatesManagement from "./admin/CertificatesManagement";
+import PDFCertificatesManagement from "./admin/PDFCertificatesManagement";
 import BadgesManagement from "./admin/BadgesManagement";
 import EnrollmentsManagement from "./admin/EnrollmentsManagement";
 import NotificationsManagement from "./admin/NotificationsManagement";
@@ -27,6 +36,8 @@ import PaymentsManagement from "./admin/PaymentsManagement";
 import ScholarshipsManagement from "./admin/ScholarshipsManagement";
 import EnrollmentRequestsManagement from "./admin/EnrollmentRequestsManagement";
 import AdminForums from "./admin/AdminForums";
+
+// Import instructor components directly (no lazy loading)
 import InstructorDashboard from "./instructor/InstructorDashboard";
 import InstructorCourses from "./instructor/InstructorCourses";
 import InstructorStudents from "./instructor/InstructorStudents";
@@ -34,10 +45,6 @@ import InstructorCourseEditor from "./instructor/InstructorCourseEditor";
 import InstructorExams from "./instructor/InstructorExams";
 import InstructorExamEditor from "./instructor/InstructorExamEditor";
 import InstructorAssignments from "./instructor/InstructorAssignments";
-import { useAuth } from "@/hooks/useAuth";
-import { useStudentPreview } from "@/hooks/useStudentPreview";
-import { PageTransition } from "@/components/PageTransition";
-import { StudentPreviewBanner } from "@/components/dashboard/StudentPreviewBanner";
 
 type AppRole = "admin" | "instructor" | "estudiante";
 
@@ -84,6 +91,7 @@ function DashboardRoutes() {
       <Route path="my-courses" element={<MyCourses />} />
       <Route path="catalog" element={<CourseCatalog />} />
       <Route path="course/:courseId" element={<CourseView />} />
+      <Route path="course/:courseId/live/:sessionId" element={<LiveSessionPage />} />
       <Route path="achievements" element={<Achievements />} />
       <Route path="leaderboard" element={<Leaderboard />} />
       <Route path="certificates" element={<Certificates />} />
@@ -151,7 +159,7 @@ function DashboardRoutes() {
       } />
       <Route path="admin-certificates" element={
         <RoleRoute allowedRoles={["admin"]}>
-          <CertificatesManagement />
+          <PDFCertificatesManagement />
         </RoleRoute>
       } />
       <Route path="admin-badges" element={

@@ -1,15 +1,15 @@
 import { useState } from "react";
-import { Award, Download, ExternalLink, Search, CheckCircle, XCircle } from "lucide-react";
+import { Award, Search, CheckCircle, XCircle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useMyCertificates, useVerifyCertificate } from "@/hooks/useCertificates";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { CertificatePreview } from "@/components/certificates/CertificatePreview";
+import { supabase } from "@/integrations/supabase/client";
 
 const Certificates = () => {
   const { data: certificates, isLoading } = useMyCertificates();
@@ -33,24 +33,17 @@ const Certificates = () => {
         return;
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({ certificateId, action: 'download' })
-        }
-      );
+      const response = await supabase.functions.invoke('generate-certificate-pdfme', {
+        body: { certificateId, action: 'download' }
+      });
 
-      if (!response.ok) {
-        throw new Error('Error al generar el certificado');
+      if (response.error) {
+        throw new Error(response.error.message || 'Error al generar el certificado');
       }
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // La respuesta debería contener el PDF como base64 o directamente como blob
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const url = window.URL.createObjectURL(pdfBlob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `certificado-${code}.pdf`;
@@ -120,45 +113,15 @@ const Certificates = () => {
           {certificates && certificates.length > 0 ? (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {certificates.map((cert) => (
-                <Card key={cert.id} className="overflow-hidden">
-                  <div className="h-2 bg-gradient-to-r from-primary to-accent" />
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <Award className="h-10 w-10 text-primary" />
-                      {cert.grade && (
-                        <Badge variant="secondary">
-                          {cert.grade.toFixed(1)}%
-                        </Badge>
-                      )}
-                    </div>
-                    <CardTitle className="text-lg">{cert.course_title}</CardTitle>
-                    <CardDescription>
-                      Emitido el {format(new Date(cert.issued_at), "d 'de' MMMM, yyyy", { locale: es })}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="font-mono bg-muted px-2 py-1 rounded text-xs">
-                        {cert.certificate_code}
-                      </span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        onClick={() => handleDownload(cert.id, cert.certificate_code)}
-                        disabled={downloadingId === cert.id}
-                      >
-                        {downloadingId === cert.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                        ) : (
-                          <Download className="h-4 w-4 mr-2" />
-                        )}
-                        Descargar PDF
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
+                <CertificatePreview
+                  key={cert.id}
+                  certificateId={cert.id}
+                  certificateCode={cert.certificate_code}
+                  courseTitle={cert.course_title}
+                  studentName={cert.student_name}
+                  issuedAt={cert.issued_at}
+                  grade={cert.grade}
+                />
               ))}
             </div>
           ) : (

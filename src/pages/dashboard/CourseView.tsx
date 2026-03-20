@@ -25,6 +25,7 @@ import { StudentAssignmentView } from "@/components/assignments/StudentAssignmen
 import { CourseLiveSessions } from "@/components/live/CourseLiveSessions";
 import { LessonMicroQuizzes } from "@/components/quizzes/LessonMicroQuizzes";
 import { CourseForumView } from "@/components/forum/CourseForumView";
+import { CertificateCard } from "@/components/certificates/CertificateCard";
 
 export default function CourseView() {
   const { courseId } = useParams();
@@ -150,7 +151,7 @@ export default function CourseView() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate-pdfme`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
@@ -346,23 +347,14 @@ export default function CourseView() {
           </Card>
 
           {isCompleted && certificate && (
-            <Card className="mb-6 border-primary/50 bg-primary/5">
-              <CardContent className="py-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Award className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground">¡Curso Completado!</h3>
-                    <p className="text-sm text-muted-foreground">Tu certificado está disponible para descargar</p>
-                  </div>
-                  <Button variant="outline" onClick={handleDownloadCertificate} className="gap-2">
-                    <Download className="h-4 w-4" />
-                    Descargar PDF
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <CertificateCard
+              certificateId={certificate.id}
+              certificateCode={certificate.certificate_code}
+              courseTitle={certificate.course_title}
+              studentName={certificate.student_name}
+              issuedAt={certificate.issued_at}
+              grade={certificate.grade}
+            />
           )}
 
           <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
@@ -371,7 +363,7 @@ export default function CourseView() {
                 <BookOpen className="h-4 w-4" />
                 <span className="hidden sm:inline">Contenido del Curso</span>
               </TabsTrigger>
-              {course?.forum_enabled !== false && (
+              {(course?.forum_enabled ?? true) && (
                 <TabsTrigger value="forum" className="flex items-center gap-2">
                   <MessageSquare className="h-4 w-4" />
                   <span className="hidden sm:inline">Comunidad y Foro</span>
@@ -493,7 +485,7 @@ export default function CourseView() {
           )}
             </TabsContent>
 
-            {course?.forum_enabled !== false && (
+            {(course?.forum_enabled ?? true) && (
               <TabsContent value="forum" className="mt-0">
                 <Card>
                   <CardContent className="p-0 sm:p-6 pt-6">

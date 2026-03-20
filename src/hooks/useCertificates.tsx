@@ -109,7 +109,7 @@ export const useDownloadCertificate = () => {
     mutationFn: async (certificateId: string) => {
       if (!session) throw new Error('Not authenticated');
       
-      const response = await supabase.functions.invoke('generate-certificate', {
+      const response = await supabase.functions.invoke('generate-certificate-pdfme', {
         body: { certificateId, action: 'download' }
       });
       
@@ -124,7 +124,7 @@ export const useDownloadCertificate = () => {
 export const useVerifyCertificate = () => {
   return useMutation({
     mutationFn: async (code: string) => {
-      const response = await supabase.functions.invoke('generate-certificate', {
+      const response = await supabase.functions.invoke('generate-certificate-pdfme', {
         body: { action: 'verify', code }
       });
       

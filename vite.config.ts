@@ -15,4 +15,10 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Optimize build performance
+    chunkSizeWarningLimit: 1000,
+    cssCodeSplit: true,
+    sourcemap: mode === 'development'
+  }
 }));

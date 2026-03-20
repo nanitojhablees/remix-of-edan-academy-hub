@@ -11,19 +11,109 @@ function base64Encode(str: string): string {
   return btoa(unescape(encodeURIComponent(str)));
 }
 
-// Generate PDF content manually (simplified PDF structure)
+// Generate PDF content manually (simplified PDF structure) with template support
 function generatePDFContent(
   studentName: string,
   courseTitle: string,
   certificateCode: string,
   issuedDate: string,
-  grade: number | null
+  grade: number | null,
+  template: any = null
 ): string {
   const pageWidth = 842; // A4 landscape width in points
   const pageHeight = 595; // A4 landscape height in points
   
   const gradeText = grade !== null ? `Calificación: ${grade.toFixed(1)}%` : '';
   
+  // Use template if provided, otherwise use default
+  if (template && template.template_data && template.template_data.elements) {
+    const elements = template.template_data.elements;
+    const colors = template.colors_config || {
+      background: "#0D2659",
+      border: "#D9A521",
+      textPrimary: "#FFFFFF",
+      textSecondary: "#D9A521",
+      textMuted: "#B3B3B3"
+    };
+    
+    let contentElements = '';
+    
+    // Generate content for each element
+    for (const element of elements) {
+      let content = element.content
+        .replace("{{studentName}}", studentName)
+        .replace("{{courseTitle}}", courseTitle)
+        .replace("{{gradeText}}", gradeText)
+        .replace("{{issuedDate}}", issuedDate)
+        .replace("{{certificateCode}}", certificateCode);
+      
+      contentElements += `
+BT
+/${element.font.includes('Bold') ? 'F1' : 'F2'} ${element.fontSize} Tf
+${element.color.replace('#', '0x').substring(0, 8)} rg
+${element.x} ${element.y} Td
+(${content}) Tj
+ET`;
+    }
+    
+    // PDF content with template
+    const content = `
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>
+endobj
+
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+
+6 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+
+4 0 obj
+<< /Length 2000 >>
+stream
+q
+% Background
+${colors.background.replace('#', '0x').substring(0, 8)} rg
+0 0 ${pageWidth} ${pageHeight} re f
+
+% Decorative elements from template
+${contentElements}
+
+Q
+endstream
+endobj
+
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000332 00000 n 
+0000000230 00000 n 
+0000000297 00000 n 
+
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2000
+%%EOF`;
+
+    return content.trim();
+  }
+  
+  // Default template (backward compatibility)
   // PDF content with embedded fonts and graphics
   const content = `
 %PDF-1.4
@@ -271,13 +361,21 @@ serve(async (req) => {
         year: 'numeric'
       });
 
-      // Generate PDF
+      // Fetch default template
+      const { data: defaultTemplate } = await supabase
+        .from('certificate_templates')
+        .select('*')
+        .eq('is_default', true)
+        .single();
+
+      // Generate PDF with template support
       const pdfContent = generatePDFContent(
         certificate.student_name,
         certificate.course_title,
         certificate.certificate_code,
         issuedDate,
-        certificate.grade
+        certificate.grade,
+        defaultTemplate
       );
 
       // Return PDF

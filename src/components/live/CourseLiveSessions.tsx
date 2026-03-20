@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCourseLiveSessions, LiveSession } from "@/hooks/useLiveSessions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,8 @@ function CountdownTimer({ targetDate }: { targetDate: Date }) {
   );
 }
 
-function LiveSessionCard({ session }: { session: LiveSession }) {
+function LiveSessionCard({ session, courseId }: { session: LiveSession; courseId: string }) {
+  const navigate = useNavigate();
   const sessionDate = new Date(session.start_time);
   const isLive = isPast(sessionDate);
   // Consider "live" window = starts in the past but within 3 hours
@@ -52,6 +54,10 @@ function LiveSessionCard({ session }: { session: LiveSession }) {
   const isCurrentlyLive = isPast(sessionDate) && isFuture(endWindow);
   const isOver = isPast(endWindow);
   const isUpcoming = isFuture(sessionDate);
+
+  const handleJoinLive = () => {
+    navigate(`/dashboard/courses/${courseId}/live/${session.id}`);
+  };
 
   return (
     <Card className={`border shadow-sm transition-all ${isCurrentlyLive ? "border-red-500/50 bg-red-500/5 shadow-red-500/10" : isOver ? "opacity-60 bg-muted/30" : "border-primary/20 bg-primary/5"}`}>
@@ -92,11 +98,9 @@ function LiveSessionCard({ session }: { session: LiveSession }) {
           )}
 
           {isCurrentlyLive && (
-            <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white gap-2" asChild>
-              <a href={session.meeting_url} target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-4 w-4" />
-                Entrar a Sala
-              </a>
+            <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white gap-2" onClick={handleJoinLive}>
+              <ExternalLink className="h-4 w-4" />
+              Entrar a Sala
             </Button>
           )}
 
@@ -147,7 +151,7 @@ export function CourseLiveSessions({ courseId }: { courseId: string }) {
       </div>
       <div className="space-y-3">
         {sorted.map((session) => (
-          <LiveSessionCard key={session.id} session={session} />
+          <LiveSessionCard key={session.id} session={session} courseId={courseId} />
         ))}
       </div>
     </div>
