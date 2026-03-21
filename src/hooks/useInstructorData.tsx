@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { useToast } from "./use-toast";
 import { Course, Module, Lesson } from "./useCourses";
+import { useCreateNotification } from "./useNotifications";
 
 export interface StudentEnrollment {
   id: string;
@@ -517,6 +518,217 @@ export function useToggleCoursePublish() {
     },
     onError: (error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Submit course for review
+export function useSubmitCourseForReview() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      const { error } = await supabase
+        .from("courses")
+        .update({ publication_status: 'pending_review' })
+        .eq("id", courseId);
+
+      if (error) throw error;
+    },
+    onSuccess: (_, courseId) => {
+      queryClient.invalidateQueries({ queryKey: ["instructor-courses"] });
+      queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      toast({ 
+        title: "Curso enviado para revisión",
+        description: "Un administrador revisará tu curso antes de su publicación."
+      });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Approve course publication
+export function useApproveCoursePublication() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const createNotification = useCreateNotification();
+
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      // Primero obtener información del curso e instructor
+      const { data: course, error: courseError } = await supabase
+        .from("courses")
+        .select(`
+          *,
+          instructor_profile:profiles!courses_instructor_id_fkey(*)
+        `)
+        .eq("id", courseId)
+        .single();
+
+      if (courseError) throw courseError;
+
+      // Actualizar estado del curso
+      const { error } = await supabase
+        .from("courses")
+        .update({ publication_status: 'approved', is_published: true })
+        .eq("id", courseId);
+
+      if (error) throw error;
+
+      // Enviar notificación por correo
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-course-approval-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            courseId: course.id,
+            instructorEmail: course.instructor_profile.email || '', // Esto podría necesitar ajustarse según la estructura real
+            instructorName: `${course.instructor_profile.first_name} ${course.instructor_profile.last_name}`,
+            courseTitle: course.title,
+            action: 'approved'
+          }),
+        });
+
+        if (!response.ok) {
+          console.error("Error al enviar notificación por correo:", await response.text());
+        }
+      } catch (emailError) {
+        console.error("Error al enviar notificación por correo:", emailError);
+      }
+
+      // Crear notificación interna
+      try {
+        await createNotification.mutateAsync({
+          userId: course.instructor_id,
+          title: "Curso aprobado",
+          message: `Tu curso "${course.title}" ha sido aprobado y ahora está publicado.`,
+          type: "success",
+          link: `/dashboard/course/${course.id}`
+        });
+      } catch (notificationError) {
+        console.error("Error al crear notificación interna:", notificationError);
+      }
+    },
+    onSuccess: (_, courseId) => {
+      queryClient.invalidateQueries({ queryKey: ["instructor-courses"] });
+      queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-course-reviews"] }); // Invalidate admin reviews cache
+      toast({ 
+        title: "Curso aprobado",
+        description: "El curso ahora está publicado y visible para los estudiantes."
+      });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Reject course publication
+export function useRejectCoursePublication() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const createNotification = useCreateNotification();
+
+  return useMutation({
+    mutationFn: async (courseId: string) => {
+      // Primero obtener información del curso e instructor
+      const { data: course, error: courseError } = await supabase
+        .from("courses")
+        .select(`
+          *,
+          instructor_profile:profiles!courses_instructor_id_fkey(*)
+        `)
+        .eq("id", courseId)
+        .single();
+
+      if (courseError) throw courseError;
+
+      // Actualizar estado del curso
+      const { error } = await supabase
+        .from("courses")
+        .update({ publication_status: 'rejected', is_published: false })
+        .eq("id", courseId);
+
+      if (error) throw error;
+
+      // Enviar notificación por correo
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-course-approval-notification`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({
+            courseId: course.id,
+            instructorEmail: course.instructor_profile.email || '', // Esto podría necesitar ajustarse según la estructura real
+            instructorName: `${course.instructor_profile.first_name} ${course.instructor_profile.last_name}`,
+            courseTitle: course.title,
+            action: 'rejected'
+          }),
+        });
+
+        if (!response.ok) {
+          console.error("Error al enviar notificación por correo:", await response.text());
+        }
+      } catch (emailError) {
+        console.error("Error al enviar notificación por correo:", emailError);
+      }
+
+      // Crear notificación interna
+      try {
+        await createNotification.mutateAsync({
+          userId: course.instructor_id,
+          title: "Curso rechazado",
+          message: `Tu curso "${course.title}" ha sido rechazado y no se ha publicado.`,
+          type: "warning",
+          link: `/dashboard/course/${course.id}`
+        });
+      } catch (notificationError) {
+        console.error("Error al crear notificación interna:", notificationError);
+      }
+    },
+    onSuccess: (_, courseId) => {
+      queryClient.invalidateQueries({ queryKey: ["instructor-courses"] });
+      queryClient.invalidateQueries({ queryKey: ["course", courseId] });
+      queryClient.invalidateQueries({ queryKey: ["courses"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-course-reviews"] }); // Invalidate admin reviews cache
+      toast({ 
+        title: "Curso rechazado",
+        description: "El curso ha sido rechazado y ya no está publicado."
+      });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+// Get courses pending review
+export function useCoursesPendingReview() {
+  return useQuery({
+    queryKey: ["admin-course-reviews"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("courses")
+        .select(`
+          *,
+          instructor_profile:profiles!courses_instructor_id_fkey(*)
+        `)
+        .eq("publication_status", "pending_review")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
     },
   });
 }

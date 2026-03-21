@@ -1,68 +1,66 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
-import { useEffect } from "react";
+import { useToast } from "./use-toast";
 
 export interface Notification {
   id: string;
   user_id: string;
   title: string;
   message: string;
-  type: string;
+  type: 'info' | 'success' | 'warning' | 'error';
   is_read: boolean;
-  link: string | null;
+  link?: string;
   created_at: string;
 }
 
-// Get user notifications
 export function useNotifications() {
   const { user } = useAuth();
-  
+
   return useQuery({
     queryKey: ["notifications", user?.id],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user) return [];
       
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(50);
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Notification[];
     },
-    enabled: !!user?.id,
+    enabled: !!user,
   });
 }
 
-// Get unread count
-export function useUnreadCount() {
+export function useUnreadNotifications() {
   const { user } = useAuth();
-  
+
   return useQuery({
-    queryKey: ["notifications-unread", user?.id],
+    queryKey: ["unread-notifications", user?.id],
     queryFn: async () => {
-      if (!user?.id) return 0;
+      if (!user) return [];
       
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from("notifications")
-        .select("*", { count: "exact", head: true })
+        .select("*")
         .eq("user_id", user.id)
-        .eq("is_read", false);
+        .eq("is_read", false)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return count || 0;
+      return data as Notification[];
     },
-    enabled: !!user?.id,
+    enabled: !!user,
   });
 }
 
-// Mark notification as read
-export function useMarkAsRead() {
+export function useMarkNotificationAsRead() {
   const queryClient = useQueryClient();
-  
+  const { toast } = useToast();
+
   return useMutation({
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
@@ -74,62 +72,100 @@ export function useMarkAsRead() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-notifications"] });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 }
 
-// Mark all as read
-export function useMarkAllAsRead() {
-  const { user } = useAuth();
+export function useMarkAllNotificationsAsRead() {
   const queryClient = useQueryClient();
-  
+  const { user } = useAuth();
+  const { toast } = useToast();
+
   return useMutation({
     mutationFn: async () => {
-      if (!user?.id) throw new Error("Not authenticated");
+      if (!user) throw new Error("No user");
       
       const { error } = await supabase
         .from("notifications")
         .update({ is_read: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
+        .eq("user_id", user.id);
 
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-notifications"] });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 }
 
-// Realtime notifications hook
-export function useRealtimeNotifications() {
-  const { user } = useAuth();
+export function useCreateNotification() {
   const queryClient = useQueryClient();
-  
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    const channel = supabase
-      .channel(`notifications:${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "notifications",
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          queryClient.invalidateQueries({ queryKey: ["notifications"] });
-          queryClient.invalidateQueries({ queryKey: ["notifications-unread"] });
-        }
-      )
-      .subscribe();
+  const { toast } = useToast();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user?.id, queryClient]);
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      title,
+      message,
+      type = 'info',
+      link
+    }: {
+      userId: string;
+      title: string;
+      message: string;
+      type?: 'info' | 'success' | 'warning' | 'error';
+      link?: string;
+    }) => {
+      const { error } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: userId,
+          title,
+          message,
+          type,
+          is_read: false,
+          link
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-notifications"] });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+}
+
+export function useDeleteNotification() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["unread-notifications"] });
+    },
+    onError: (error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 }

@@ -2,6 +2,8 @@
 
 Este documento proporciona una visión general técnica y funcional del proyecto EDAN Academy Hub para facilitar el desarrollo y mantenimiento.
 
+<!-- proyecto actualizado -->
+
 ## 🚀 Descripción de la Aplicación
 **EDAN Academy Hub** es una plataforma de gestión de aprendizaje (LMS) integral diseñada para conectar a estudiantes, instructores y administradores. Permite la creación y consumo de cursos, gestión de inscripciones, sistemas de evaluación (exámenes y micro-quizzes), gamificación, y una comunidad activa mediante foros integrados.
 

@@ -55,7 +55,7 @@
 - **Qué se hizo:** Se eliminó el code-splitting con lazy loading debido a problemas persistentes de carga de páginas. Se importan todos los componentes directamente para garantizar la carga correcta de la aplicación.
 - **Archivos modificados:** 
   - src/App.tsx
-  - src/pages/Dashboard.tsx
+ - src/pages/Dashboard.tsx
   - vite.config.ts
 - **Tablas afectadas:** Ninguna
 - **Estado:** ✅ Completado
@@ -143,8 +143,7 @@
 
 ### 20/03/2026 - Corrección de problemas en el sistema de certificados
 - **Qué se hizo:** Se corrigieron errores de tipos en el editor de certificados PDF y en la función Edge de generación de certificados. Se arregló la estructura de la plantilla por defecto en PDFCertificateEditor.tsx y se agregaron directivas para ignorar errores de tipos en la función Edge que no afectan la ejecución en el entorno de Supabase.
-- **Archivos modificados:** 
-  - src/components/certificates/PDFCertificateEditor.tsx
+- **Archivos modificados:** src/components/certificates/PDFCertificateEditor.tsx
   - supabase/functions/generate-certificate-pdfme/index.ts
 - **Tablas afectadas:** Ninguna
 - **Estado:** ✅ Completado
@@ -153,6 +152,34 @@
 ### 20/03/2026 07:59 - Añadir pestaña de foro al CourseView
 - **Qué se hizo:** Se añadió la pestaña "Comunidad y Foro" al componente CourseView.tsx con el componente CourseForumView para que los estudiantes puedan interactuar en el foro del curso
 - **Archivos modificados:** src/pages/dashboard/CourseView.tsx
+- **Tablas afectadas:** Ninguna
+- **Estado:** ✅ Completado
+- **Pendiente:** Ninguno
+
+### 20/03/2026 - Implementar sistema de revisión y aprobación de cursos
+- **Qué se hizo:** Se implementó un sistema completo para que los cursos creados por instructores requieran aprobación de administrador antes de ser publicados. Se añadió un estado de revisión pendiente, panel de administración para aprobar/rechazar cursos, notificaciones internas y por correo para instructores, y actualización de la lógica de visibilidad de cursos.
+- **Archivos modificados:** 
+  - supabase/migrations/20260320154500_add_publication_status_to_courses.sql
+  - src/hooks/useInstructorData.tsx
+  - src/pages/instructor/InstructorCourseEditor.tsx
+  - src/hooks/useCourses.tsx
+  - src/components/admin/AdminCourseApprovalPanel.tsx
+  - supabase/functions/send-course-approval-notification/index.ts
+  - src/hooks/useNotifications.tsx
+- **Tablas afectadas:** courses (añadida columna publication_status), notifications (nueva tabla)
+- **Estado:** ✅ Completado
+- **Pendiente:** Ninguno
+
+### 21/03/2026 - Corrección de importaciones en AdminCourseApprovalPanel
+- **Qué se hizo:** Se corrigió el error de tipos en AdminCourseApprovalPanel.tsx donde faltaba importar explícitamente AlertDialogTrigger en la lista de importaciones, causando errores de compilación.
+- **Archivos modificados:** src/components/admin/AdminCourseApprovalPanel.tsx
+- **Tablas afectadas:** Ninguna
+- **Estado:** ✅ Completado
+- **Pendiente:** Ninguno
+
+### 19 - 2026-03-21 12:45:45 - Corrección de errores de tipo en función de edge send-course-approval-notification
+- **Qué se hizo:** Se corrigieron errores de tipo en la función de edge send-course-approval-notification/index.ts añadiendo anotaciones de tipo apropiadas y la directiva @ts-nocheck para resolver problemas con módulos externos de Deno y el objeto global Deno.
+- **Archivos modificados:** supabase/functions/send-course-approval-notification/index.ts
 - **Tablas afectadas:** Ninguna
 - **Estado:** ✅ Completado
 - **Pendiente:** Ninguno

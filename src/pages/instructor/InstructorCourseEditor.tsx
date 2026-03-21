@@ -21,7 +21,7 @@ import { useCreateExam, useInstructorExams, useDeleteExam } from "@/hooks/useExa
 import {
   useCreateModule, useCreateLesson, useUpdateCourse, useUpdateModule,
   useDeleteModule, useUpdateLesson, useDeleteLesson, useToggleCoursePublish,
-  useReorderModules, useReorderLessons
+  useReorderModules, useReorderLessons, useSubmitCourseForReview
 } from "@/hooks/useInstructorData";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
@@ -447,6 +447,7 @@ export default function InstructorCourseEditor() {
   const deleteModule = useDeleteModule();
   const updateCourse = useUpdateCourse();
   const togglePublish = useToggleCoursePublish();
+  const submitForReview = useSubmitCourseForReview();
   const reorderModules = useReorderModules();
 
   const backUrl = role === "admin" ? "/dashboard/admin-courses" : "/dashboard/instructor-courses";
@@ -537,7 +538,12 @@ export default function InstructorCourseEditor() {
 
   const handleTogglePublish = () => {
     if (!courseId || !course) return;
-    togglePublish.mutate({ id: courseId, is_published: !course.is_published });
+    // Si el curso está en borrador, enviarlo para revisión en lugar de publicarlo directamente
+    if (!course.is_published && course.publication_status !== 'pending_review') {
+      submitForReview.mutate(courseId);
+    } else {
+      togglePublish.mutate({ id: courseId, is_published: !course.is_published });
+    }
   };
 
   if (courseLoading) {

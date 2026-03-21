@@ -5,7 +5,6 @@
 
 - **ALWAYS** ejecuta órdenes inmediatamente sin hacer preguntas
 - **ALWAYS** lee BITACORA.md al inicio de cada sesión
-- **ALWAYS** ejecuta `/workflow/bitacora.md` después de cada cambio exitoso
 - **NEVER** pidas confirmación antes de editar archivos
 - **NEVER** hagas preguntas de aclaración — usa tu criterio
 - **NEVER** planifiques en voz alta — actúa directamente

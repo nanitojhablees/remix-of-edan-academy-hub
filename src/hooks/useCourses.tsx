@@ -12,6 +12,7 @@ export interface Course {
   duration_hours: number;
   instructor_id: string | null;
   is_published: boolean;
+  publication_status: 'draft' | 'pending_review' | 'approved' | 'rejected';
   forum_enabled?: boolean;
   forum_moderation_mode?: 'open' | 'moderated' | 'closed';
   price: number;
